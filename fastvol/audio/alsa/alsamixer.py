@@ -1,6 +1,22 @@
 """Minimal ALSA mixer CFFI binding."""
 
-__all__ = ["ALSAMixerError", "Control", "Mixer"]
+__all__ = [
+    "ALSAMixerError",
+    "Control",
+    "Mixer",
+    "SND_MIXER_SCHN_UNKNOWN",
+    "SND_MIXER_SCHN_FRONT_LEFT",
+    "SND_MIXER_SCHN_FRONT_RIGHT",
+    "SND_MIXER_SCHN_REAR_LEFT",
+    "SND_MIXER_SCHN_REAR_RIGHT",
+    "SND_MIXER_SCHN_FRONT_CENTER",
+    "SND_MIXER_SCHN_WOOFER",
+    "SND_MIXER_SCHN_SIDE_LEFT",
+    "SND_MIXER_SCHN_SIDE_RIGHT",
+    "SND_MIXER_SCHN_REAR_CENTER",
+    "SND_MIXER_SCHN_LAST",
+    "SND_MIXER_SCHN_MONO",
+]
 
 from cffi import FFI
 import select
@@ -74,7 +90,13 @@ SND_MIXER_SCHN_MONO = C.SND_MIXER_SCHN_MONO
 
 
 class Mixer:
+    """ALSA mixer."""
     def __init__(self, name="default"):
+        """
+        Initialize an ALSA mixer.
+
+        :param str name: The ALSA mixer name (e.g. "default", "hw:0")
+        """
         self.name = name
 
         # Open the mixer.
@@ -91,13 +113,19 @@ class Mixer:
         return '<Mixer {}>'.format(repr(self.name))
 
     def find_control(self, name):
+        """
+        Find a mixer control.
+
+        :param str name: The Mixer Control name (e.g. "Master, PCM")
+        :return: :class:`Control` or None
+        """
         # Allocate and initialize an ID.
         id_ptr = ffi.new("snd_mixer_selem_id_t **")
         _chk(C.snd_mixer_selem_id_malloc(id_ptr))
         elem_id = id_ptr[0]
         try:
             C.snd_mixer_selem_id_set_name(elem_id, _UTF8(name))
-            
+
             # Find the control.
             elem = C.snd_mixer_find_selem(self.mixer, elem_id)
             if elem:
@@ -108,6 +136,13 @@ class Mixer:
             C.snd_mixer_selem_id_free(elem_id)
 
     def poll(self, breakfd=None, timeout=None):
+        """
+        Poll for ALSA events on this Mixer.
+
+        :param int breakfd: An additional file descriptor to poll
+        :param int timeout: Optional timeout, in milliseconds
+        :return: True if an ALSA event was handled, False if breakfd was polled or timed out
+        """
         # Prepare the poll object.
         fds = self._get_poll_descriptors()
         poll = self._poll_obj_from_fds(fds)
@@ -130,6 +165,7 @@ class Mixer:
         return False
 
     def _get_poll_descriptors(self):
+        """Get a list of pollfd structs for this Mixer."""
         # Get the poll descriptor count
         expected = C.snd_mixer_poll_descriptors_count(self.mixer)
         if expected < 1:
@@ -144,12 +180,14 @@ class Mixer:
         return fds[0:count]
 
     def _poll_obj_from_fds(self, fds):
+        """Convert a list of pollfd structs into a :class:`select.poll`."""
         poll_obj = select.poll()
         for pollfd in fds:
             poll_obj.register(pollfd.fd, pollfd.events)
         return poll_obj
 
     def _fds_from_poll_results(self, results):
+        """Convert the results of :meth:`select.poll.poll()` to a list of pollfd structs."""
         fds = ffi.new("struct pollfd[{}]".format(len(results)))
         for i, result in enumerate(results):
             fds[i].fd = result[0]
@@ -158,7 +196,14 @@ class Mixer:
 
 
 class Control:
+    """ALSA Mixer Control."""
     def __init__(self, elem, name):
+        """Initialize an ALSA mixer control.
+        
+        :param elem: The mixer element
+        :type elem: snd_mixer_elem_t *
+        :param str name: The Control name
+        """
         self.elem = elem
         self.name = name
 
@@ -166,12 +211,23 @@ class Control:
         return "<Control {}>".format(repr(self.name))
 
     def get_volume(self, channel=0):
+        """Get the volume of this control, as of the last Mixer poll.
+
+        :param int channel: The channel number
+        :return: The volume
+        """
         volume_ptr = ffi.new("long *")
         _chk(C.snd_mixer_selem_get_playback_volume(self.elem, channel, volume_ptr))
         # TODO: translate with the algorithm from volume_mapping.c
         return volume_ptr[0]
 
     def set_volume(self, volume, channel=None):
+        """Set the volume of this control.
+
+        :param volume: The new volume
+        :param int channel: The channel number
+
+        """
         # TODO: translate with the algorithm from volume_mapping.c
         if channel is None:
             _chk(C.snd_mixer_selem_set_playback_volume_all(self.elem, volume))
@@ -181,15 +237,23 @@ class Control:
 
 
 class ALSAMixerError(Exception):
-    def __init__(self, message=None, rc=None):
+    """ALSA mixer error."""
+    def __init__(self, message=None, code=None):
+        """Instantiate a new mixer error.
+
+        :param message: The error message
+        :param code: The error code
+
+        """
+        assert (message is not None) or (code is not None)
         self.message = message
-        self.rc = rc
+        self.code = code
 
 
 def _chk(rc):
     """Check a return code is OK."""
     if rc < 0:
-        raise ALSAMixerError(rc)
+        raise ALSAMixerError(code=rc)
 
 def _UTF8(s):
     """Convert a string to utf-8 bytes."""
