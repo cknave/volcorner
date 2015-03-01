@@ -8,7 +8,7 @@ import select
 import threading
 
 import xcffib
-import xcffib.xproto
+from xcffib.xproto import EventMask, GeGenericEvent, GrabMode
 import xcffib.xinput
 
 from fastvol.tracking import MouseTracker, Point
@@ -28,7 +28,6 @@ class XInput2MouseTracker(MouseTracker):
         self.thread = None
 
     def start(self):
-        """Start the mouse tracker."""
         # Connect to X server and load extensions.
         self.conn = xcffib.connect()
         self.root = self.conn.setup.roots[0].root
@@ -40,14 +39,13 @@ class XInput2MouseTracker(MouseTracker):
         # Process events on a background thread.
         self.break_r, self.break_w = os.pipe()
         self.thread = threading.Thread(
-            target=self.get_events,
+            target=self._get_events,
             kwargs={'breakfd': self.break_r},
             name="XInput2MouseTracker",
             daemon=True)
         self.thread.start()
 
     def stop(self):
-        """Stop the mouse tracker."""
         # Do nothing if already stopped.
         if self.thread is None:
             return
@@ -69,6 +67,16 @@ class XInput2MouseTracker(MouseTracker):
         self.root = None
         self.conn.disconnect()
         self.conn = None
+
+    def grab_scroll(self):
+        # Buttons 4 and 5 are the scroll wheel.
+        self._grab_button(4)
+        self._grab_button(5)
+
+    def ungrab_scroll(self):
+        # Buttons 4 and 5 are the scroll wheel.
+        self._ungrab_button(4)
+        self._ungrab_button(5)
 
 
     def _load_xinput(self):
@@ -96,7 +104,17 @@ class XInput2MouseTracker(MouseTracker):
         self.conn.xinput.XISelectEvents(self.root, 1, [event_mask])
         self.conn.flush()
 
-    def get_events(self, breakfd=None):
+    def _grab_button(self, button):
+        """Grab press/release events for this button."""
+        events = EventMask.ButtonPress | EventMask.ButtonRelease
+        mode = GrabMode.Async
+        self.conn.core.GrabButton(0, self.root, events, mode, mode, 0, 0, button, 0)
+
+    def _ungrab_button(self, button):
+        """Ungrab all events for this button."""
+        self.conn.core.UngrabButton(button, self.root, 0)
+
+    def _get_events(self, breakfd=None):
         # Prepare to poll for events.
         poll = select.poll()
         poll.register(self.conn.get_file_descriptor(), select.POLLIN)

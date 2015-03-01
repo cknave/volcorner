@@ -21,11 +21,29 @@ class MouseTracker():
 
     @abstractmethod
     def start(self):
-        """Start the mouse tracker."""
+        """
+        Start the mouse tracker.
+
+        While the mouse tracker is running, it should update the :attr:`last_point` property
+        with the latest mouse cursor position.
+        """
 
     @abstractmethod
     def stop(self):
         """Stop the mouse tracker."""
+
+    @abstractmethod
+    def grab_scroll(self):
+        """
+        Grab the scroll wheel.
+
+        While the scroll wheel is grabbed, the tracker should intercept scroll wheel events and
+        call :meth:`on_scroll_up` and :meth:`on_scroll_down`.
+        """
+
+    @abstractmethod
+    def ungrab_scroll(self):
+        """Ungrab the scroll wheel."""
 
     @property
     def region(self):
@@ -70,6 +88,13 @@ class MouseTracker():
         else:
             self._in_region = self._region.contains(self._last_point)
 
+        # Check if we entered or left the region.
         if self._in_region != was_in_region:
             print("Tracker: {}".format(self._in_region))
             # TODO: publish notification
+
+            # Grab the scroll wheel while inside the region.
+            if self._in_region:
+                self.grab_scroll()
+            else:
+                self.ungrab_scroll()
