@@ -5,6 +5,7 @@ import time
 
 from fastvol.audio.alsa.alsamixer import Mixer
 
+
 def test_set_and_poll():
     """Test that volume is updated after a poll."""
     mixer = Mixer()
@@ -27,6 +28,7 @@ def test_set_and_poll():
         # Restore original volume
         control.set_volume(original_vol)
 
+
 def test_poll_timeout():
     """Test that a poll times out."""
     mixer = Mixer()
@@ -34,6 +36,7 @@ def test_poll_timeout():
     mixer.poll(timeout=500)
     end = time.time()
     assert end - start >= 0.5
+
 
 def test_poll_breakfd():
     """Test that a poll can be aborted by a file descriptor."""

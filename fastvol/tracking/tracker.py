@@ -13,10 +13,7 @@ from fastvol.tracking import Rect
 _log = logging.getLogger()
 
 
-class MouseTracker():
-    """Abstract mouse tracker."""
-    __metaclass__ = ABCMeta
-
+class MouseTracker(metaclass=ABCMeta):
     """Mouse tracking abstract base class."""
     def __init__(self, region=None):
         """
@@ -115,7 +112,7 @@ class MouseTracker():
 
         # Check if we entered or left the region.
         if self._in_region != was_in_region:
-            _log.debug("In region: {}", self._in_region)
+            _log.debug("In region: %s", self._in_region)
 
             # Grab the scroll wheel while inside the region.
             if self._in_region:
