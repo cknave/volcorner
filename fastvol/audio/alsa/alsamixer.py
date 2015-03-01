@@ -53,7 +53,8 @@ int snd_mixer_attach(snd_mixer_t *mixer, const char *name);
 int snd_mixer_load(snd_mixer_t *mixer);
 int snd_mixer_poll_descriptors_count(snd_mixer_t *mixer);
 int snd_mixer_poll_descriptors(snd_mixer_t *mixer, struct pollfd *pfds, unsigned int space);
-int snd_mixer_poll_descriptors_revents(snd_mixer_t *mixer, struct pollfd *pfds, unsigned int nfds, unsigned short *revents);
+int snd_mixer_poll_descriptors_revents(snd_mixer_t *mixer, struct pollfd *pfds, unsigned int nfds,
+                                       unsigned short *revents);
 
 int snd_mixer_selem_register(snd_mixer_t *mixer,
         struct snd_mixer_selem_regopt *options,
@@ -105,7 +106,7 @@ class Mixer:
         self.mixer = mixer_ptr[0]
 
         # Initialize it.
-        _chk(C.snd_mixer_attach(self.mixer, _UTF8(name)))
+        _chk(C.snd_mixer_attach(self.mixer, _utf8(name)))
         _chk(C.snd_mixer_selem_register(self.mixer, ffi.NULL, ffi.NULL))
         _chk(C.snd_mixer_load(self.mixer))
 
@@ -124,7 +125,7 @@ class Mixer:
         _chk(C.snd_mixer_selem_id_malloc(id_ptr))
         elem_id = id_ptr[0]
         try:
-            C.snd_mixer_selem_id_set_name(elem_id, _UTF8(name))
+            C.snd_mixer_selem_id_set_name(elem_id, _utf8(name))
 
             # Find the control.
             elem = C.snd_mixer_find_selem(self.mixer, elem_id)
@@ -179,14 +180,16 @@ class Mixer:
 
         return fds[0:count]
 
-    def _poll_obj_from_fds(self, fds):
+    @staticmethod
+    def _poll_obj_from_fds(fds):
         """Convert a list of pollfd structs into a :class:`select.poll`."""
         poll_obj = select.poll()
         for pollfd in fds:
             poll_obj.register(pollfd.fd, pollfd.events)
         return poll_obj
 
-    def _fds_from_poll_results(self, results):
+    @staticmethod
+    def _fds_from_poll_results(results):
         """Convert the results of :meth:`select.poll.poll()` to a list of pollfd structs."""
         fds = ffi.new("struct pollfd[{}]".format(len(results)))
         for i, result in enumerate(results):
@@ -235,7 +238,6 @@ class Control:
             _chk(C.snd_mixer_selem_set_playback_volume(self.elem, channel, volume))
 
 
-
 class ALSAMixerError(Exception):
     """ALSA mixer error."""
     def __init__(self, message=None, code=None):
@@ -255,21 +257,7 @@ def _chk(rc):
     if rc < 0:
         raise ALSAMixerError(code=rc)
 
-def _UTF8(s):
+
+def _utf8(s):
     """Convert a string to utf-8 bytes."""
     return s.encode("utf-8")
-
-
-def _test():
-    """Test watching master volume."""
-    mixer = Mixer()
-    control = mixer.find_control("Master")
-    volume = control.get_volume()
-    print("{}: {}".format(repr(control), volume))
-    control.set_volume(32, 0)
-    while True:
-        mixer.poll()
-        print("new volume: {}".format(control.get_volume()))
-
-if __name__ == '__main__':
-    _test()

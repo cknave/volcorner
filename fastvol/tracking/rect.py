@@ -12,6 +12,7 @@ from collections import namedtuple
 Point = namedtuple('Point', 'x y')
 Size = namedtuple('Size', 'width height')
 
+
 class Rect(namedtuple('Rect', 'origin size')):
     """A rectangle."""
     __slots__ = ()

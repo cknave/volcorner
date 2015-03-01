@@ -50,7 +50,7 @@ class XInput2MouseTracker(MouseTracker):
         if self.thread is None:
             return
 
-        # Wake up the backgroud thread by writing to its break pipe.
+        # Wake up the background thread by writing to its break pipe.
         os.write(self.break_w, b"1")
         os.close(self.break_w)
         self.break_w = None
@@ -78,7 +78,6 @@ class XInput2MouseTracker(MouseTracker):
         self._ungrab_button(4)
         self._ungrab_button(5)
 
-
     def _load_xinput(self):
         """Return the XInput extension, checking for XI2.
 
@@ -93,7 +92,6 @@ class XInput2MouseTracker(MouseTracker):
         except:
             log.error("Failed to get XInput 2", exc_info=True)
             raise ValueError("XInput 2 is required.")
-
 
     def _select_motion_events(self):
         """Select raw motion events from all input devices."""

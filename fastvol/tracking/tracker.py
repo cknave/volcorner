@@ -3,6 +3,15 @@
 __all__ = ['MouseTracker']
 
 from abc import ABCMeta, abstractmethod
+import logging
+
+import smokesignal
+
+from fastvol import signals
+from fastvol.tracking import Rect
+
+_log = logging.getLogger()
+
 
 class MouseTracker():
     """Abstract mouse tracker."""
@@ -79,16 +88,16 @@ class MouseTracker():
         Subclasses should call this when the scroll wheel has been grabbed, and a scroll up event
         has occurred.
         """
-        # TODO: publish event
-        print("SCROLL UP")
+        _log.debug("Scrolled up")
+        smokesignal.emit(signals.SCROLL_UP)
 
     def on_scroll_down(self):
         """
         Subclasses should call this when the scroll wheel has been grabbed, and a scroll down
         event has occurred.
         """
-        # TODO: publish event
-        print("SCROLL DOWN")
+        _log.debug("Scrolled down")
+        smokesignal.emit(signals.SCROLL_DOWN)
 
     def _update_in_region(self):
         """
@@ -106,11 +115,12 @@ class MouseTracker():
 
         # Check if we entered or left the region.
         if self._in_region != was_in_region:
-            print("Tracker: {}".format(self._in_region))
-            # TODO: publish notification
+            _log.debug("In region: {}", self._in_region)
 
             # Grab the scroll wheel while inside the region.
             if self._in_region:
                 self.grab_scroll()
+                smokesignal.emit(signals.ENTER_REGION)
             else:
                 self.ungrab_scroll()
+                smokesignal.emit(signals.LEAVE_REGION)
