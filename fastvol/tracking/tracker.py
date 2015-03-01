@@ -74,6 +74,22 @@ class MouseTracker():
         """Check if the current cursor point is within the region of interest."""
         return self._in_region
 
+    def on_scroll_up(self):
+        """
+        Subclasses should call this when the scroll wheel has been grabbed, and a scroll up event
+        has occurred.
+        """
+        # TODO: publish event
+        print("SCROLL UP")
+
+    def on_scroll_down(self):
+        """
+        Subclasses should call this when the scroll wheel has been grabbed, and a scroll down
+        event has occurred.
+        """
+        # TODO: publish event
+        print("SCROLL DOWN")
+
     def _update_in_region(self):
         """
         Update whether the point is in the region of interest.

@@ -8,7 +8,7 @@ import select
 import threading
 
 import xcffib
-from xcffib.xproto import EventMask, GeGenericEvent, GrabMode
+from xcffib.xproto import ButtonMask, ButtonPressEvent, EventMask, GeGenericEvent, GrabMode
 import xcffib.xinput
 
 from fastvol.tracking import MouseTracker, Point
@@ -132,10 +132,18 @@ class XInput2MouseTracker(MouseTracker):
                 event = self.conn.poll_for_event()
                 if event is None:
                     break
-                # Expect a generic event for the XInput extension.
-                if not isinstance(event, xcffib.xproto.GeGenericEvent):
-                    continue
+                self._handle_event(event)
 
-                # Update the pointer position.
-                pointer = self.conn.core.QueryPointer(self.root).reply()
-                self.last_point = Point(pointer.root_x, pointer.root_y)
+    def _handle_event(self, event):
+        """Handle an X event."""
+        if isinstance(event, xcffib.xproto.GeGenericEvent):
+            # GeGenericEvent is an XInput2 pointer event.
+            # Update the pointer position.
+            pointer = self.conn.core.QueryPointer(self.root).reply()
+            self.last_point = Point(pointer.root_x, pointer.root_y)
+        elif isinstance(event, ButtonPressEvent):
+            # Button press is a scroll up/down event.
+            if event.detail == 4:
+                self.on_scroll_up()
+            elif event.detail == 5:
+                self.on_scroll_down()
