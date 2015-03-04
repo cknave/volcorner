@@ -2,6 +2,7 @@ from setuptools import setup
 
 requires = [
         'cffi',
+        'smokesignal',
 ]
 
 tests_require = [

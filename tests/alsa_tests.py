@@ -3,7 +3,7 @@
 import os
 import time
 
-from fastvol.audio.alsa.alsamixer import Mixer
+from fastvol.audio.alsa.mixercffi import Mixer
 
 
 def test_set_and_poll():

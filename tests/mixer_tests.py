@@ -7,10 +7,18 @@ from tests.util import SignalReceiver
 
 class MockMixer(Mixer):
     """Mock mixer."""
-    def get_volume(self):
+    def open(self):
+        pass
+
+    def close(self):
+        pass
+
+    @property
+    def volume(self):
         return 0.0
 
-    def set_volume(self, value):
+    @volume.setter
+    def volume(self, value):
         pass
 
 

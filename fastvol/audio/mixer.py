@@ -1,13 +1,25 @@
 """Abstract base audio mixer."""
 
+__all__ = ['Mixer']
+
 from abc import ABCMeta, abstractmethod
-from fastvol import signals
 import smokesignal
+
+from fastvol import signals
 
 
 class Mixer(metaclass=ABCMeta):
     @abstractmethod
-    def get_volume(self):
+    def open(self):
+        """Open the mixer and start monitoring for volume changes."""
+
+    @abstractmethod
+    def close(self):
+        """Close the mixer."""
+
+    @property
+    @abstractmethod
+    def volume(self):
         """
         Get the current volume as a float.
 
@@ -15,8 +27,9 @@ class Mixer(metaclass=ABCMeta):
         :rtype: float
         """
 
+    @volume.setter
     @abstractmethod
-    def set_volume(self, value):
+    def volume(self, value):
         """
         Set the current volume as a float.
 

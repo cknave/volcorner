@@ -2,6 +2,7 @@
 
 __all__ = ['XInput2MouseTracker']
 
+from functools import wraps
 import logging
 import os
 import select
@@ -17,6 +18,15 @@ from fastvol.tracking import MouseTracker, Point
 log = logging.getLogger()
 
 
+def run_on_thread(f):
+    """Decorator to run this method on the tracker thread."""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        self = args[0]
+        self._run_on_thread(f, args, kwargs)
+    return wrapper
+
+
 class XInput2MouseTracker(MouseTracker):
     """XInput mouse tracker."""
     def __init__(self):
@@ -26,8 +36,14 @@ class XInput2MouseTracker(MouseTracker):
         self.break_r = None
         self.break_w = None
         self.thread = None
+        self._should_stop = False
+        self._thread_operations = []
 
     def start(self):
+        # Reset state.
+        self._should_stop = False
+        self._thread_operations = []
+
         # Connect to X server and load extensions.
         self.conn = xcffib.connect()
         self.root = self.conn.setup.roots[0].root
@@ -51,6 +67,7 @@ class XInput2MouseTracker(MouseTracker):
             return
 
         # Wake up the background thread by writing to its break pipe.
+        self._should_stop = True
         os.write(self.break_w, b"1")
         os.close(self.break_w)
         self.break_w = None
@@ -68,11 +85,13 @@ class XInput2MouseTracker(MouseTracker):
         self.conn.disconnect()
         self.conn = None
 
+    @run_on_thread
     def grab_scroll(self):
         # Buttons 4 and 5 are the scroll wheel.
         self._grab_button(4)
         self._grab_button(5)
 
+    @run_on_thread
     def ungrab_scroll(self):
         # Buttons 4 and 5 are the scroll wheel.
         self._ungrab_button(4)
@@ -123,7 +142,13 @@ class XInput2MouseTracker(MouseTracker):
         while True:
             fds = [fd for (fd, event) in poll.poll()]
             if breakfd in fds:
-                break
+                os.read(breakfd, 1024)
+                # Stop if we were asked to.
+                if self._should_stop:
+                    break
+                # Run all the operations queued for this thread.
+                for operation, args, kwargs in self._thread_operations:
+                    operation(*args, **kwargs)
 
             # Handle all available X events.
             while True:
@@ -145,3 +170,8 @@ class XInput2MouseTracker(MouseTracker):
                 self.on_scroll_up()
             elif event.detail == 5:
                 self.on_scroll_down()
+
+    def _run_on_thread(self, target, args, kwargs):
+        self._thread_operations.append((target, args, kwargs))
+        os.write(self.break_w, b"1")
+
