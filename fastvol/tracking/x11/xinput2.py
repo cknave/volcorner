@@ -9,13 +9,13 @@ import select
 import threading
 
 import xcffib
-from xcffib.xproto import ButtonMask, ButtonPressEvent, EventMask, GeGenericEvent, GrabMode
+from xcffib.xproto import ButtonPressEvent, EventMask, GeGenericEvent, GrabMode
 import xcffib.xinput
 
 from fastvol.tracking import MouseTracker, Point
 
 
-log = logging.getLogger()
+_log = logging.getLogger()
 
 
 def run_on_thread(f):
@@ -109,7 +109,7 @@ class XInput2MouseTracker(MouseTracker):
             xinput.XIQueryVersion(xinput_major, xinput_minor).reply()
             return xinput
         except:
-            log.error("Failed to get XInput 2", exc_info=True)
+            _log.error("Failed to get XInput 2", exc_info=True)
             raise ValueError("XInput 2 is required.")
 
     def _select_motion_events(self):
@@ -123,6 +123,7 @@ class XInput2MouseTracker(MouseTracker):
 
     def _grab_button(self, button):
         """Grab press/release events for this button."""
+        _log.debug("Grabbing button %s", button)
         events = EventMask.ButtonPress | EventMask.ButtonRelease
         mode = GrabMode.Async
         self.conn.core.GrabButton(0, self.root, events, mode, mode, 0, 0, button, 0)
@@ -159,13 +160,15 @@ class XInput2MouseTracker(MouseTracker):
 
     def _handle_event(self, event):
         """Handle an X event."""
-        if isinstance(event, xcffib.xproto.GeGenericEvent):
+        if isinstance(event, GeGenericEvent):
             # GeGenericEvent is an XInput2 pointer event.
             # Update the pointer position.
             pointer = self.conn.core.QueryPointer(self.root).reply()
             self.last_point = Point(pointer.root_x, pointer.root_y)
+            _log.debug("Pointer event %s", self._last_point)
         elif isinstance(event, ButtonPressEvent):
             # Button press is a scroll up/down event.
+            _log.debug("Button press event %s", event.detail)
             if event.detail == 4:
                 self.on_scroll_up()
             elif event.detail == 5:

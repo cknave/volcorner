@@ -86,6 +86,5 @@ class ALSAMixer(Mixer):
             if not self._mixer.poll(breakfd):
                 break
             # Update the volume.
-            volume = self.get_volume()
-            self.on_volume_changed(volume)
+            self.on_volume_changed(self.volume)
         os.close(breakfd)

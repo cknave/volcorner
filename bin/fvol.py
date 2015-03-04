@@ -18,6 +18,7 @@ VOL_STEP = 0.05
 
 logging.getLogger().setLevel(logging.DEBUG)
 
+
 def main():
     """Main function."""
     # Start tracking the mouse, with the region of interest on the hot corner.

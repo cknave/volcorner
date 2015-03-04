@@ -1,12 +1,13 @@
 from setuptools import setup
 
 requires = [
-        'cffi',
-        'smokesignal',
+    'cffi',
+    'smokesignal',
+    'xcffib',
 ]
 
 tests_require = [
-        'nose',
+    'nose',
 ]
 
 setup(name='fastvol',
