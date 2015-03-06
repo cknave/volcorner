@@ -41,11 +41,11 @@ class Rect(namedtuple('Rect', 'origin size')):
 
     @property
     def x2(self):
-        return self.origin.x + self.size.width
+        return self.origin.x + self.size.width - 1
 
     @property
     def y2(self):
-        return self.origin.y + self.size.height
+        return self.origin.y + self.size.height - 1
 
     def contains(self, point):
         """
@@ -57,4 +57,4 @@ class Rect(namedtuple('Rect', 'origin size')):
         px, py = point
         x1, y1 = self.origin
         x2, y2 = self.x2, self.y2
-        return (x1 <= px < x2) and (y1 <= py < y2)
+        return (x1 <= px <= x2) and (y1 <= py <= y2)

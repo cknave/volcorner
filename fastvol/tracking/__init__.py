@@ -1,13 +1,16 @@
 """Mouse pointer tracking."""
 
 __all__ = [
-    # Rect
+    # .corner
+    'Corner',
+    # .rect
     'Point',
     'Size',
     'Rect',
-    # Tracker
+    # .tracker
     'MouseTracker',
 ]
 
 from .rect import Point, Size, Rect
 from .tracker import MouseTracker
+from .corner import Corner

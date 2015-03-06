@@ -1,6 +1,7 @@
 from setuptools import setup
 
 requires = [
+    'appdirs',
     'cffi',
     'smokesignal',
     'xcffib',

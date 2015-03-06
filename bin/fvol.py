@@ -6,6 +6,7 @@ import logging
 import smokesignal
 
 from fastvol.audio.alsa import ALSAMixer
+from fastvol.config import get_config
 from fastvol import signals
 from fastvol.tracking import Rect
 from fastvol.tracking.x11 import XInput2MouseTracker
@@ -21,6 +22,9 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 def main():
     """Main function."""
+    # Load configuration.
+    config = get_config()
+
     # Start tracking the mouse, with the region of interest on the hot corner.
     tracker = XInput2MouseTracker()
     tracker.region = REGION_CORNER
