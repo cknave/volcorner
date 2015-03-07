@@ -2,7 +2,7 @@
 
 from enum import Enum
 
-from .rect import Rect, Point, Size
+from fastvol import Point, Rect, Size
 
 
 class Corner(Enum):

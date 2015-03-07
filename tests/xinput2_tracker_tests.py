@@ -3,8 +3,7 @@
 import subprocess
 import time
 
-from fastvol import signals
-from fastvol.tracking import Rect
+from fastvol import Rect, signals
 from fastvol.tracking.x11 import XInput2MouseTracker
 from .util import SignalReceiver, with_xte, with_xvfb
 

@@ -2,7 +2,8 @@
 
 from nose.tools import raises
 
-from fastvol.tracking import Corner, Rect, Size
+from fastvol import Rect, Size
+from fastvol.tracking import Corner
 
 
 TEST_SCREEN = Size(100, 100)

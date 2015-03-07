@@ -3,7 +3,7 @@
 from nose import with_setup
 
 from fastvol import signals
-from fastvol.tracking.rect import Rect, Point
+from fastvol.rect import Rect, Point
 from fastvol.tracking.tracker import MouseTracker
 from .util import SignalReceiver
 

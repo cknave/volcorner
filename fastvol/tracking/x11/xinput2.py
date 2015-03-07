@@ -2,96 +2,67 @@
 
 __all__ = ['XInput2MouseTracker']
 
-from functools import wraps
 import logging
 import os
 import select
-import threading
 
 import xcffib
 from xcffib.xproto import ButtonPressEvent, EventMask, GeGenericEvent, GrabMode
 import xcffib.xinput
 
-from fastvol.tracking import MouseTracker, Point
+from fastvol import Point
+from fastvol.threading import PollThread, run_on_thread
+from fastvol.tracking import MouseTracker
 
 
 _log = logging.getLogger()
-
-
-def run_on_thread(f):
-    """Decorator to run this method on the tracker thread."""
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        self = args[0]
-        self._run_on_thread(f, args, kwargs)
-    return wrapper
 
 
 class XInput2MouseTracker(MouseTracker):
     """XInput mouse tracker."""
     def __init__(self):
         super().__init__()
-        self.conn = None
-        self.root = None
-        self.break_r = None
-        self.break_w = None
-        self.thread = None
-        self._should_stop = False
-        self._thread_operations = []
+        self._conn = None
+        self._root = None
+        self._thread = None
 
     def start(self):
-        # Reset state.
-        self._should_stop = False
-        self._thread_operations = []
-
         # Connect to X server and load extensions.
-        self.conn = xcffib.connect()
-        self.root = self.conn.setup.roots[0].root
-        self.conn.xinput = self._load_xinput()
+        self._conn = xcffib.connect()
+        self._root = self._conn.setup.roots[0].root
+        self._conn.xinput = self._load_xinput()
 
         # Select XInput motion events.
         self._select_motion_events()
 
         # Process events on a background thread.
-        self.break_r, self.break_w = os.pipe()
-        self.thread = threading.Thread(
-            target=self._get_events,
-            kwargs={'breakfd': self.break_r},
+        self._thread = PollThread(
+            target=self._tracker_loop,
             name="XInput2MouseTracker",
             daemon=True)
-        self.thread.start()
+        self._thread.start()
 
     def stop(self):
         # Do nothing if already stopped.
-        if self.thread is None:
+        if self._thread is None:
             return
 
-        # Wake up the background thread by writing to its break pipe.
-        self._should_stop = True
-        os.write(self.break_w, b"1")
-        os.close(self.break_w)
-        self.break_w = None
-
         # Wait for the thread to finish.
-        self.thread.join()
-        self.thread = None
-
-        # Close the read end of the break pipe.
-        os.close(self.break_r)
-        self.break_r = None
+        self._thread.stop()
+        self._thread = None
 
         # Close the X connection.
-        self.root = None
-        self.conn.disconnect()
-        self.conn = None
+        self._root = None
+        self._conn.disconnect()
+        self._conn = None
 
-    @run_on_thread
+    @run_on_thread('_thread')
     def grab_scroll(self):
         # Buttons 4 and 5 are the scroll wheel.
         self._grab_button(4)
         self._grab_button(5)
 
-    @run_on_thread
+    @run_on_thread('_thread')
     def ungrab_scroll(self):
         # Buttons 4 and 5 are the scroll wheel.
         self._ungrab_button(4)
@@ -105,7 +76,7 @@ class XInput2MouseTracker(MouseTracker):
         """
         xinput_major, xinput_minor = (2, 2)
         try:
-            xinput = self.conn(xcffib.xinput.key)
+            xinput = self._conn(xcffib.xinput.key)
             xinput.XIQueryVersion(xinput_major, xinput_minor).reply()
             return xinput
         except:
@@ -118,52 +89,40 @@ class XInput2MouseTracker(MouseTracker):
             deviceid=xcffib.xinput.Device.AllMaster,
             mask_len=1,
             mask=xcffib.List.synthetic(list=[xcffib.xinput.XIEventMask.RawMotion]))
-        self.conn.xinput.XISelectEvents(self.root, 1, [event_mask])
-        self.conn.flush()
+        self._conn.xinput.XISelectEvents(self._root, 1, [event_mask])
+        self._conn.flush()
 
     def _grab_button(self, button):
         """Grab press/release events for this button."""
         _log.debug("Grabbing button %s", button)
         events = EventMask.ButtonPress | EventMask.ButtonRelease
         mode = GrabMode.Async
-        self.conn.core.GrabButton(0, self.root, events, mode, mode, 0, 0, button, 0)
+        self._conn.core.GrabButton(0, self._root, events, mode, mode, 0, 0, button, 0)
 
     def _ungrab_button(self, button):
         """Ungrab all events for this button."""
-        self.conn.core.UngrabButton(button, self.root, 0)
+        _log.debug("Ungrabbing button %s", button)
+        self._conn.core.UngrabButton(button, self._root, 0)
 
-    def _get_events(self, breakfd=None):
-        # Prepare to poll for events.
-        poll = select.poll()
-        poll.register(self.conn.get_file_descriptor(), select.POLLIN)
-        if breakfd is not None:
-            poll.register(breakfd, select.POLLIN)
+    def _tracker_loop(self):
+        """Thread main loop."""
+        fd = self._conn.get_file_descriptor()
+        self._thread.poll(lambda _: self._handle_all_events(), fd)
 
-        # Loop until breakfd is written to.
+    def _handle_all_events(self):
+        """Handle all available X events."""
         while True:
-            fds = [fd for (fd, event) in poll.poll()]
-            if breakfd in fds:
-                os.read(breakfd, 1024)
-                # Stop if we were asked to.
-                if self._should_stop:
-                    break
-                # Run all the operations queued for this thread.
-                for operation, args, kwargs in self._thread_operations:
-                    operation(*args, **kwargs)
-
-            # Handle all available X events.
-            while True:
-                event = self.conn.poll_for_event()
-                if event is None:
-                    break
-                self._handle_event(event)
+            event = self._conn.poll_for_event()
+            if event is None:
+                break
+            self._handle_event(event)
 
     def _handle_event(self, event):
         """Handle an X event."""
         if isinstance(event, GeGenericEvent):
             # GeGenericEvent is an XInput2 pointer event.
             # Update the pointer position.
-            pointer = self.conn.core.QueryPointer(self.root).reply()
+            pointer = self._conn.core.QueryPointer(self._root).reply()
             self.last_point = Point(pointer.root_x, pointer.root_y)
             _log.debug("Pointer event %s", self._last_point)
         elif isinstance(event, ButtonPressEvent):
@@ -173,8 +132,3 @@ class XInput2MouseTracker(MouseTracker):
                 self.on_scroll_up()
             elif event.detail == 5:
                 self.on_scroll_down()
-
-    def _run_on_thread(self, target, args, kwargs):
-        self._thread_operations.append((target, args, kwargs))
-        os.write(self.break_w, b"1")
-

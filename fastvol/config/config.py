@@ -1,5 +1,21 @@
 """Configuration interface."""
 
+__all__ = [
+    # Constants
+    'APP_NAME',
+    'APP_AUTHOR',
+    'APP_DIRS',
+    'FILENAME',
+    'SECTION_DEFAULTS',
+    'DEFAULTS',
+
+    # Functions
+    'get_config',
+    'config_file_path',
+    'create_default_config',
+    'read_config_file',
+]
+
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import configparser
 import logging
@@ -9,6 +25,7 @@ import sys
 from appdirs import AppDirs
 
 from fastvol.tracking import Corner
+from . import keys
 
 
 # Config file constants
@@ -22,7 +39,9 @@ SECTION_DEFAULTS = 'Defaults'
 
 # Default configuration (non-platform specific)
 DEFAULTS = {
-    'corner': 'top-left'
+    keys.CORNER: 'top-left',
+    keys.ACTIVATE_SIZE: 1,
+    keys.DEACTIVATE_SIZE: 100,
 }
 
 _log = logging.getLogger()
@@ -47,7 +66,11 @@ def get_config(argv=sys.argv[1:], app_dirs=APP_DIRS, defaults=DEFAULTS):
     # Parse the rest of the command line arguments with the config file as defaults.
     parser = ArgumentParser(parents=[config_parser])
     parser.set_defaults(**defaults)
-    parser.add_argument('-x', '--corner', choices=[c.id for c in Corner],
+    parser.add_argument('-a', '--'+keys.ACTIVATE_SIZE, type=int, metavar='N',
+                        help="The hot corner activation size, in pixels")
+    parser.add_argument('-d', '--'+keys.DEACTIVATE_SIZE, type=int, metavar='N',
+                        help="The hot corner deactivation size, in pixels")
+    parser.add_argument('-x', '--'+keys.CORNER, choices=[c.id for c in Corner],
                         help="The hot corner to use")
     return parser.parse_args(remaining_argv)
 
