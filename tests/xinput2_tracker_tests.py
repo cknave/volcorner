@@ -1,7 +1,6 @@
 """XInput2MouseTracker tests."""
 
 import subprocess
-import time
 
 from fastvol import Rect, signals
 from fastvol.tracking.x11 import XInput2MouseTracker

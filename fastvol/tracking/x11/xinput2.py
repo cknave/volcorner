@@ -3,8 +3,6 @@
 __all__ = ['XInput2MouseTracker']
 
 import logging
-import os
-import select
 
 import xcffib
 from xcffib.xproto import ButtonPressEvent, EventMask, GeGenericEvent, GrabMode
