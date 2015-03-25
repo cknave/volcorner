@@ -59,12 +59,14 @@ class XInput2MouseTracker(MouseTracker):
         # Buttons 4 and 5 are the scroll wheel.
         self._grab_button(4)
         self._grab_button(5)
+        self._conn.flush()
 
     @run_on_thread('_thread')
     def ungrab_scroll(self):
         # Buttons 4 and 5 are the scroll wheel.
         self._ungrab_button(4)
         self._ungrab_button(5)
+        self._conn.flush()
 
     def _load_xinput(self):
         """Return the XInput extension, checking for XI2.
@@ -122,7 +124,7 @@ class XInput2MouseTracker(MouseTracker):
             # Update the pointer position.
             pointer = self._conn.core.QueryPointer(self._root).reply()
             self.last_point = Point(pointer.root_x, pointer.root_y)
-            _log.debug("Pointer event %s", self._last_point)
+            #_log.debug("Pointer event %s", self._last_point)
         elif isinstance(event, ButtonPressEvent):
             # Button press is a scroll up/down event.
             _log.debug("Button press event %s", event.detail)
@@ -130,3 +132,5 @@ class XInput2MouseTracker(MouseTracker):
                 self.on_scroll_up()
             elif event.detail == 5:
                 self.on_scroll_down()
+        else:
+            _log.debug("Ignoring event %r", event)

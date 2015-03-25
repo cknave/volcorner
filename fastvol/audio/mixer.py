@@ -42,4 +42,4 @@ class Mixer(metaclass=ABCMeta):
 
         :param float value: the new volume, between 0.0 and 1.0
         """
-        smokesignal.emit(signals.VOLUME_CHANGED, value)
+        smokesignal.emit(signals.CHANGE_VOLUME, value)

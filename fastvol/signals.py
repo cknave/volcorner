@@ -1,7 +1,7 @@
 """Signal names."""
 
 # Mixer signals
-VOLUME_CHANGED = "volume_changed"
+CHANGE_VOLUME = "change_volume"
 
 # Mouse tracking signals
 ENTER_REGION = "enter_region"
@@ -10,4 +10,4 @@ SCROLL_DOWN = "scroll_down"
 SCROLL_UP = "scroll_up"
 
 # Screen signals
-RESOLUTION_CHANGED = "resolution_changed"
+CHANGE_RESOLUTION = "change_resolution"

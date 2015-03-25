@@ -25,7 +25,7 @@ class MockMixer(Mixer):
 def test_emit_volume_changed():
     """Test that the volume changed signal is emitted when on_volume_changed() is called."""
     mixer = MockMixer()
-    volume_changed = SignalReceiver(signals.VOLUME_CHANGED)
+    volume_changed = SignalReceiver(signals.CHANGE_VOLUME)
     mixer.on_volume_changed(0.5)
     assert volume_changed.received
     assert volume_changed.args[0] == 0.5

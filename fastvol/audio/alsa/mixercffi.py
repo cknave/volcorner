@@ -68,6 +68,12 @@ int snd_mixer_selem_set_playback_volume(snd_mixer_elem_t *elem, snd_mixer_selem_
 int snd_mixer_selem_set_playback_volume_all(snd_mixer_elem_t *elem, long value);
 int snd_mixer_selem_get_playback_volume(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, long *value);
 int snd_mixer_handle_events(snd_mixer_t *mixer);
+
+int snd_mixer_selem_get_playback_dB_range(snd_mixer_elem_t *, long *, long *);
+int snd_mixer_selem_get_playback_volume_range(snd_mixer_elem_t *, long *, long *);
+int snd_mixer_selem_get_playback_dB(snd_mixer_elem_t *, snd_mixer_selem_channel_id_t, long *);
+int snd_mixer_selem_set_playback_dB(snd_mixer_elem_t *, snd_mixer_selem_channel_id_t, long, int);
+int snd_mixer_selem_set_playback_dB_all(snd_mixer_elem_t *, long, int);
 """
 
 # Set up C bindings
@@ -213,29 +219,75 @@ class Control:
     def __repr__(self):
         return "<Control {}>".format(repr(self.name))
 
-    def get_volume(self, channel=0):
-        """Get the volume of this control, as of the last Mixer poll.
+    def get_raw_range(self):
+        """
+        Get the range of this control.
+
+        :return: (min, max) tuple
+        """
+        min_ptr = ffi.new("long *")
+        max_ptr = ffi.new("long *")
+        _chk(C.snd_mixer_selem_get_playback_volume_range(self.elem, min_ptr, max_ptr))
+        return min_ptr[0], max_ptr[0]
+
+    def get_raw_volume(self, channel=0):
+        """
+        Get the volume of this control, as of the last Mixer poll.
 
         :param int channel: The channel number
         :return: The volume
         """
         volume_ptr = ffi.new("long *")
         _chk(C.snd_mixer_selem_get_playback_volume(self.elem, channel, volume_ptr))
-        # TODO: translate with the algorithm from volume_mapping.c
         return volume_ptr[0]
 
-    def set_volume(self, volume, channel=None):
-        """Set the volume of this control.
+    def set_raw_volume(self, volume, channel=None):
+        """
+        Set the volume of this control.
 
         :param volume: The new volume
         :param int channel: The channel number
 
         """
-        # TODO: translate with the algorithm from volume_mapping.c
         if channel is None:
             _chk(C.snd_mixer_selem_set_playback_volume_all(self.elem, volume))
         else:
             _chk(C.snd_mixer_selem_set_playback_volume(self.elem, channel, volume))
+
+    def get_db_range(self):
+        """
+        Get the range of this control in decibels × 100.
+
+        :return: (min, max) tuple
+        """
+        min_ptr = ffi.new("long *")
+        max_ptr = ffi.new("long *")
+        _chk(C.snd_mixer_selem_get_playback_dB_range(self.elem, min_ptr, max_ptr))
+        return min_ptr[0], max_ptr[0]
+
+    def get_db(self, channel=0):
+        """
+        Get the volume of this control in decibels × 100, as of the last Mixer poll.
+
+        :param int channel: The channel number
+        :return: The volume
+        """
+        volume_ptr = ffi.new("long *")
+        _chk(C.snd_mixer_selem_get_playback_dB(self.elem, channel, volume_ptr))
+        return volume_ptr[0]
+
+    def set_db(self, volume, channel=None, dir=0):
+        """
+        Set the volume of this control in decibels × 100.
+
+        :param volume: The new volume
+        :param int channel: The channel number
+        :param int dir: Select direction (-1 = accurate or first bellow, 0 = accurate, 1 = accurate or first above)
+        """
+        if channel is None:
+            _chk(C.snd_mixer_selem_set_playback_dB_all(self.elem, volume, dir))
+        else:
+            _chk(C.snd_mixer_selem_set_playback_dB(self.elem, channel, volume, dir))
 
 
 class ALSAMixerError(Exception):

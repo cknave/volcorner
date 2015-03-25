@@ -35,4 +35,4 @@ class Screen(metaclass=ABCMeta):
 
         :param Size size: the new resolution
         """
-        smokesignal.emit(signals.RESOLUTION_CHANGED, size)
+        smokesignal.emit(signals.CHANGE_RESOLUTION, size)

@@ -57,21 +57,27 @@ def get_config(argv=sys.argv[1:], app_dirs=APP_DIRS, defaults=DEFAULTS):
     # Get the config file path.
     config_parser = ArgumentParser(add_help=False)  # Help will be added on the real ArgumentParser
     config_parser.add_argument('-c', '--config-file', metavar='FILE',
-                               help="Specify config file (default: {})".format(_user_config_file_path()))
+                               help="specify config file (default: {})".format(_user_config_file_path()))
     path, remaining_argv = config_file_path(config_parser, argv, app_dirs, defaults)
 
     # Read the defaults from the config file.
-    defaults = read_config_file(path) or DEFAULTS
+    defaults = DEFAULTS.copy()
+    config_values = read_config_file(path)
+    if config_values:
+        defaults.update(config_values)
+
+    # To get a flag name, prefix with '--' and replace '_' with '-'
+    flag = lambda s: '--' + s.replace('_', '-')
 
     # Parse the rest of the command line arguments with the config file as defaults.
     parser = ArgumentParser(parents=[config_parser])
     parser.set_defaults(**defaults)
-    parser.add_argument('-a', '--'+keys.ACTIVATE_SIZE, type=int, metavar='N',
-                        help="The hot corner activation size, in pixels")
-    parser.add_argument('-d', '--'+keys.DEACTIVATE_SIZE, type=int, metavar='N',
-                        help="The hot corner deactivation size, in pixels")
-    parser.add_argument('-x', '--'+keys.CORNER, choices=[c.id for c in Corner],
-                        help="The hot corner to use")
+    parser.add_argument('-a', flag(keys.ACTIVATE_SIZE), type=int, metavar='N',
+                        help="hot corner activation size, in pixels")
+    parser.add_argument('-d', flag(keys.DEACTIVATE_SIZE), type=int, metavar='N',
+                        help="hot corner deactivation size, in pixels")
+    parser.add_argument('-x', flag(keys.CORNER), choices=[c.id for c in Corner],
+                        help="corner to use")
     return parser.parse_args(remaining_argv)
 
 

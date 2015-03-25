@@ -10,10 +10,10 @@ def test_set_and_poll():
     """Test that volume is updated after a poll."""
     mixer = Mixer()
     control = mixer.find_control("Master")
-    original_vol = control.get_volume()
+    original_vol = control.get_raw_volume()
     try:
         # Set the volume to 0
-        control.set_volume(0)
+        control.set_raw_volume(0)
 
         # Poll for an event.  It should return immediately, since we just set the volume.
         start = time.time()
@@ -22,11 +22,11 @@ def test_set_and_poll():
         assert end - start < 0.5
 
         # Check the volume was updated
-        vol = control.get_volume()
+        vol = control.get_raw_volume()
         assert vol == 0
     finally:
         # Restore original volume
-        control.set_volume(original_vol)
+        control.set_raw_volume(original_vol)
 
 
 def test_poll_timeout():

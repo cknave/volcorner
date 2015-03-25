@@ -3,9 +3,12 @@
 __all__ = ['PollThread', 'run_on_thread']
 
 from functools import wraps
+import logging
 import os
 import select
 import threading
+
+_log = logging.getLogger()
 
 
 def run_on_thread(thread_attr_name):
@@ -51,13 +54,17 @@ class PollThread(threading.Thread):
 
             # Handle break events.
             if self._break_r in [fd for (fd, event) in responses]:
+                _log.debug("Break from polling on %s", self.name)
                 os.read(self._break_r, 1024)
                 # Stop if we were asked to.
                 if self._should_stop:
+                    _log.debug("Ending %s due to stop()", self.name)
                     break
                 # Run all the operations queued for this thread.
                 for operation, args, kwargs in self._operations:
+                    _log.debug("Executing %r on %s", operation, self.name)
                     operation(*args, **kwargs)
+                self._operations.clear()
 
             # Handle the rest of the responses.
             remaining_responses = [r for r in responses if r[0] != self._break_r]

@@ -115,8 +115,6 @@ class MouseTracker(metaclass=ABCMeta):
 
             # Grab the scroll wheel while inside the region.
             if self._in_region:
-                self.grab_scroll()
                 smokesignal.emit(signals.ENTER_REGION)
             else:
-                self.ungrab_scroll()
                 smokesignal.emit(signals.LEAVE_REGION)
