@@ -25,10 +25,11 @@ class Corner(Enum):
 
         :param Size screen_size: the screen size
         :param Size corner_size: the size of the Rect to return
-        :return:
+        :return: the rect for this Corner
         """
         # Find the corners by starting at the root, and adding size*direction.
-        screen = Rect(Point(0, 0), screen_size)
+        # Use the screen size + 1 to offset subtracting 1 when using the bottom/right of the screen.
+        screen = Rect.make(0, 0, screen_size.width + 1, screen_size.height + 1)
         x1 = getattr(screen, self.x_root)
         x2 = x1 + corner_size.width * self.x_direction
         y1 = getattr(screen, self.y_root)

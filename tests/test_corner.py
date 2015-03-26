@@ -19,19 +19,19 @@ def test_top_left():
 def test_top_right():
     """Test calculating the top left corner."""
     corner = Corner.TOP_RIGHT.rect(TEST_SCREEN, TEST_SIZE)
-    assert corner == Rect.make(98, 0, 1, 1)
+    assert corner == Rect.make(99, 0, 1, 1)
 
 
 def test_bottom_left():
     """Test calculating the top left corner."""
     corner = Corner.BOTTOM_LEFT.rect(TEST_SCREEN, TEST_SIZE)
-    assert corner == Rect.make(0, 98, 1, 1)
+    assert corner == Rect.make(0, 99, 1, 1)
 
 
 def test_bottom_right():
     """Test calculating the top left corner."""
     corner = Corner.BOTTOM_RIGHT.rect(TEST_SCREEN, TEST_SIZE)
-    assert corner == Rect.make(98, 98, 1, 1)
+    assert corner == Rect.make(99, 99, 1, 1)
 
 
 def test_get_from_id():

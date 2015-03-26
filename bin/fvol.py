@@ -18,6 +18,8 @@ VOL_STEP = 0.05
 
 logging.basicConfig(level=logging.DEBUG)
 
+_log = logging.getLogger()
+
 
 class FVol:
     def __init__(self, config):
@@ -80,7 +82,7 @@ class FVol:
         self.mixer.volume = max(0.0, self.mixer.volume - VOL_STEP)
 
     def on_change_resolution(self, screen_size):
-        pass  # TODO: update the tracking area
+        self._update_tracking_regions()
 
     def _process_config(self, config):
         """Initialize instance variables from the config."""
@@ -107,6 +109,7 @@ class FVol:
             self.tracker.region = self._activate_region
         else:
             self.tracker.region = self._deactivate_region
+        _log.debug("Now tracking region %r", self.tracker.region)
 
 
 def main():
