@@ -9,7 +9,7 @@ import smokesignal
 
 from fastvol import Rect, signals
 
-_log = logging.getLogger()
+_log = logging.getLogger("tracking")
 
 
 class MouseTracker(metaclass=ABCMeta):

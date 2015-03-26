@@ -18,7 +18,7 @@ VOL_STEP = 0.05
 
 logging.basicConfig(level=logging.DEBUG)
 
-_log = logging.getLogger()
+_log = logging.getLogger("fvol")
 
 
 class FVol:

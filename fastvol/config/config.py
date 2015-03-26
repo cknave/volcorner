@@ -44,7 +44,7 @@ DEFAULTS = {
     keys.DEACTIVATE_SIZE: 100,
 }
 
-_log = logging.getLogger()
+_log = logging.getLogger("config")
 
 
 def get_config(argv=sys.argv[1:], app_dirs=APP_DIRS, defaults=DEFAULTS):

@@ -13,7 +13,7 @@ from fastvol import Size
 from fastvol.screen import Screen
 from fastvol.threading import PollThread
 
-_log = logging.getLogger()
+_log = logging.getLogger("screen")
 
 
 class RandRScreen(Screen):

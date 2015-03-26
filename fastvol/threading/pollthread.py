@@ -8,7 +8,7 @@ import os
 import select
 import threading
 
-_log = logging.getLogger()
+_log = logging.getLogger("threading")
 
 
 def run_on_thread(thread_attr_name):

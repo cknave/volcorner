@@ -13,7 +13,7 @@ from fastvol.threading import PollThread, run_on_thread
 from fastvol.tracking import MouseTracker
 
 
-_log = logging.getLogger()
+_log = logging.getLogger("tracking")
 
 
 class XInput2MouseTracker(MouseTracker):

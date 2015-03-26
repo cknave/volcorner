@@ -10,7 +10,7 @@ import threading
 from fastvol.audio import Mixer
 from . import mixercffi
 
-_log = logging.getLogger()
+_log = logging.getLogger("audio")
 
 # ALSA Rounding direction parameter (0=exact)
 ROUND_DIR = 0
@@ -96,18 +96,29 @@ class ALSAMixer(Mixer):
     @volume.setter
     def volume(self, value):
         assert self._control is not None
+        assert 0.0 <= value <= 1.0
         if self._supports_db:
             min, max = self._control.get_db_range()
 
             if use_linear_db_scale(min, max):
                 db = round_dir(value * (max - min), ROUND_DIR) + min
+                _log.debug("Setting %.02f dB", db / 100.0)
                 self._control.set_db(db)
             else:
                 if min != SND_CTL_TLV_DB_GAIN_MUTE:
                     min_norm = exp10((min - max) / 6000.0)
                     value = value * (1 - min_norm) + min_norm
                 db = round_dir(6000.0 * math.log10(value), ROUND_DIR)
+                _log.debug("Setting %.02f dB", db / 100.0)
                 self._control.set_db(db)
+        else: # No dB support
+            min, max = self._control.get_raw_range()
+            if min == max:
+                raise mixercffi.ALSAMixerError(message="Unable to determine volume range")
+            volume = int(value * (max - min) + min)
+            _log.debug("Setting %d hw volume", volume)
+            self._control.set_raw_volume(volume)
+
 
 
     def _watch_volume(self, breakfd):
