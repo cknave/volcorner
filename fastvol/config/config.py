@@ -15,9 +15,10 @@ __all__ = [
     'create_default_config',
     'read_config_file',
     'log_level_for_verbosity',
+    'write_config',
 ]
 
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from argparse import ArgumentParser, Namespace
 import configparser
 import logging
 import os.path
@@ -55,8 +56,8 @@ def get_config(argv=sys.argv[1:], app_dirs=APP_DIRS, defaults=DEFAULTS):
     """
     Get the configuration, from the command line and the config file.
 
-    :return: the configuration
-    :rtype: argparse.Namespace
+    :return: (configuration, path) tuple
+    :rtype: (Namespace, str)
     """
     # Get the config file path.
     config_parser = ArgumentParser(add_help=False)  # Help will be added on the real ArgumentParser
@@ -80,11 +81,13 @@ def get_config(argv=sys.argv[1:], app_dirs=APP_DIRS, defaults=DEFAULTS):
                         help="hot corner activation size, in pixels")
     parser.add_argument('-d', flag(keys.DEACTIVATE_SIZE), type=int, metavar='N',
                         help="hot corner deactivation size, in pixels")
-    parser.add_argument('-v', dest=keys.VERBOSE, action='count',
-                        help="increase verbosity (up to -vvv)")
     parser.add_argument('-x', flag(keys.CORNER), choices=[c.id for c in Corner],
                         help="corner to use")
-    return parser.parse_args(remaining_argv)
+    parser.add_argument('-v', dest=keys.VERBOSE, action='count',
+                        help="increase verbosity (up to -vvv)")
+    parser.add_argument('-s', '--save', action='store_true',
+                        help="save this configuration as the new default")
+    return parser.parse_args(remaining_argv), path
 
 
 def config_file_path(parser, argv, app_dirs=APP_DIRS, defaults=DEFAULTS):
@@ -156,6 +159,24 @@ def read_config_file(path):
     except KeyError:
         _log.warn("Ignoring config file %s because it has no %s section.", path, SECTION_DEFAULTS)
         return None
+
+
+def write_config(config, path):
+    """
+    Write an argparse Namespace out to a config file.
+
+    :param Namespace config: the configuration Namespace to write
+    :param str path: the path to write to
+    """
+    # Build a dict of the configuration keys and their values
+    cvars = vars(config)
+    names = (getattr(keys, x) for x in keys.__all__)
+    defaults = {k: cvars[k] for k in names}
+
+    writer = configparser.ConfigParser()
+    writer[SECTION_DEFAULTS] = defaults
+    with open(path, 'w') as config_file:
+        writer.write(config_file)
 
 
 def log_level_for_verbosity(verbosity):

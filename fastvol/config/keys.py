@@ -3,7 +3,8 @@
 __all__ = [
     'ACTIVATE_SIZE',
     'DEACTIVATE_SIZE',
-    'CORNER'
+    'CORNER',
+    'VERBOSE'
 ]
 
 ACTIVATE_SIZE = "activate_size"

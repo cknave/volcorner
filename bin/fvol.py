@@ -7,7 +7,7 @@ import smokesignal
 
 from fastvol import Rect, signals, Size
 from fastvol.audio.alsa import ALSAMixer
-from fastvol.config import get_config, log_level_for_verbosity
+from fastvol.config import get_config, log_level_for_verbosity, write_config
 from fastvol.config.keys import CORNER, ACTIVATE_SIZE, DEACTIVATE_SIZE, VERBOSE
 from fastvol.screen.x11 import RandRScreen
 from fastvol.tracking import Corner
@@ -20,13 +20,15 @@ _log = logging.getLogger("fvol")
 
 
 class FVol:
-    def __init__(self, config):
+    def __init__(self, config, config_path):
         """
         Initialize the app.
 
         :param config: the configuration from fastvol.config.get_config()
+        :param config_path: the configuration file path from fastvol.config.get_config()
         """
         self.config = config
+        self.config_path = config_path
         self._process_config(config)
         self.screen = None
         self._activate_region = None
@@ -105,6 +107,10 @@ class FVol:
         logging.basicConfig(level=log_level)
         _log.info("Set log level %s", logging.getLevelName(log_level))
 
+        # Special config value: save the config now that it's set
+        if cvars['save']:
+            write_config(config, self.config_path)
+
     def _update_tracking_regions(self):
         """Update the tracking regions for the current screen resolution."""
         assert (self.screen is not None) and (self.screen.size is not None)
@@ -123,8 +129,8 @@ class FVol:
 def main():
     """Main function."""
     # Load configuration.
-    config = get_config()
-    fvol = FVol(config)
+    config, config_path = get_config()
+    fvol = FVol(config, config_path)
     fvol.run()
 
 if __name__ == '__main__':
