@@ -14,6 +14,7 @@ __all__ = [
     'config_file_path',
     'create_default_config',
     'read_config_file',
+    'log_level_for_verbosity',
 ]
 
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
@@ -24,8 +25,10 @@ import sys
 
 from appdirs import AppDirs
 
+import fastvol.logging
 from fastvol.tracking import Corner
 from . import keys
+
 
 
 # Config file constants
@@ -42,6 +45,7 @@ DEFAULTS = {
     keys.CORNER: 'top-left',
     keys.ACTIVATE_SIZE: 1,
     keys.DEACTIVATE_SIZE: 100,
+    keys.VERBOSE: 0,
 }
 
 _log = logging.getLogger("config")
@@ -76,6 +80,8 @@ def get_config(argv=sys.argv[1:], app_dirs=APP_DIRS, defaults=DEFAULTS):
                         help="hot corner activation size, in pixels")
     parser.add_argument('-d', flag(keys.DEACTIVATE_SIZE), type=int, metavar='N',
                         help="hot corner deactivation size, in pixels")
+    parser.add_argument('-v', dest=keys.VERBOSE, action='count',
+                        help="increase verbosity (up to -vvv)")
     parser.add_argument('-x', flag(keys.CORNER), choices=[c.id for c in Corner],
                         help="corner to use")
     return parser.parse_args(remaining_argv)
@@ -150,6 +156,23 @@ def read_config_file(path):
     except KeyError:
         _log.warn("Ignoring config file %s because it has no %s section.", path, SECTION_DEFAULTS)
         return None
+
+
+def log_level_for_verbosity(verbosity):
+    """
+    Return the python logging level for a verbosity config value.
+
+    :param verbosity: the verbosity argument count
+    :return: the logging level
+    """
+    if verbosity == 0:
+        return logging.WARNING
+    elif verbosity == 1:
+        return logging.INFO
+    elif verbosity == 2:
+        return logging.DEBUG
+    elif verbosity == 3:
+        return fastvol.logging.TRACE
 
 
 def _user_config_file_path(app_dirs=APP_DIRS):

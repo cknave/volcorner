@@ -9,3 +9,4 @@ __all__ = [
 ACTIVATE_SIZE = "activate_size"
 DEACTIVATE_SIZE = "deactivate_size"
 CORNER = "corner"
+VERBOSE = "verbose"

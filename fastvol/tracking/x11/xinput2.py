@@ -9,6 +9,7 @@ from xcffib.xproto import ButtonPressEvent, EventMask, GeGenericEvent, GrabMode
 import xcffib.xinput
 
 from fastvol import Point
+import fastvol.logging
 from fastvol.threading import PollThread, run_on_thread
 from fastvol.tracking import MouseTracker
 
@@ -124,7 +125,7 @@ class XInput2MouseTracker(MouseTracker):
             # Update the pointer position.
             pointer = self._conn.core.QueryPointer(self._root).reply()
             self.last_point = Point(pointer.root_x, pointer.root_y)
-            #_log.debug("Pointer event %s", self._last_point)
+            _log.log(fastvol.logging.TRACE, "Pointer event %s", self._last_point)
         elif isinstance(event, ButtonPressEvent):
             # Button press is a scroll up/down event.
             _log.debug("Button press event %s", event.detail)

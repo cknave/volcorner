@@ -7,16 +7,14 @@ import smokesignal
 
 from fastvol import Rect, signals, Size
 from fastvol.audio.alsa import ALSAMixer
-from fastvol.config import get_config
-from fastvol.config.keys import CORNER, ACTIVATE_SIZE, DEACTIVATE_SIZE
+from fastvol.config import get_config, log_level_for_verbosity
+from fastvol.config.keys import CORNER, ACTIVATE_SIZE, DEACTIVATE_SIZE, VERBOSE
 from fastvol.screen.x11 import RandRScreen
 from fastvol.tracking import Corner
 from fastvol.tracking.x11 import XInput2MouseTracker
 
 # Amount to step the volume per scroll event
 VOL_STEP = 0.05
-
-logging.basicConfig(level=logging.DEBUG)
 
 _log = logging.getLogger("fvol")
 
@@ -45,20 +43,25 @@ class FVol:
 
     def run(self):
         self.mixer = ALSAMixer()
-        self.screen = RandRScreen()
-        self.tracker = XInput2MouseTracker()
-
         self.mixer.open()
-        self.screen.open()
+        _log.info("Mixer initialized")
 
+        self.screen = RandRScreen()
+        self.screen.open()
+        _log.info("Screen initialized")
+
+        self.tracker = XInput2MouseTracker()
         self._update_tracking_regions()
         self.tracker.start()
+        _log.info("Tracker initialized")
 
+        _log.info("Initialization complete; running main loop")
         # TODO: run UI main loop
         try:
             import time
             time.sleep(999999999999)
         finally:
+            _log.info("Shutting down")
             self.tracker.stop()
             self.screen.close()
             self.mixer.close()
@@ -96,6 +99,11 @@ class FVol:
 
         deactivate_dim = cvars[DEACTIVATE_SIZE]
         self._deactivate_size = Size(deactivate_dim, deactivate_dim)
+
+        verbosity = cvars[VERBOSE]
+        log_level = log_level_for_verbosity(verbosity)
+        logging.basicConfig(level=log_level)
+        _log.info("Set log level %s", logging.getLevelName(log_level))
 
     def _update_tracking_regions(self):
         """Update the tracking regions for the current screen resolution."""
