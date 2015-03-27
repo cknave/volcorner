@@ -7,7 +7,7 @@ import math
 import os
 import threading
 
-from volcorner.audio import Mixer
+from volcorner.audio.mixer import Mixer
 from . import mixercffi
 
 _log = logging.getLogger("audio")
@@ -85,7 +85,7 @@ class ALSAMixer(Mixer):
                 min_norm = exp10((min - max) / 6000.0)
                 normalized = (normalized - min_norm) / (1 - min_norm)
             return normalized
-        else: # No dB support
+        else:  # No dB support
             min, max = self._control.get_raw_range()
             if min == max:
                 raise mixercffi.ALSAMixerError(message="Unable to determine volume range")
@@ -111,14 +111,13 @@ class ALSAMixer(Mixer):
                 db = round_dir(6000.0 * math.log10(value), ROUND_DIR)
                 _log.debug("Setting %.02f dB", db / 100.0)
                 self._control.set_db(db)
-        else: # No dB support
+        else:  # No dB support
             min, max = self._control.get_raw_range()
             if min == max:
                 raise mixercffi.ALSAMixerError(message="Unable to determine volume range")
             volume = int(value * (max - min) + min)
             _log.debug("Setting %d hw volume", volume)
             self._control.set_raw_volume(volume)
-
 
 
     def _watch_volume(self, breakfd):
@@ -145,6 +144,7 @@ class ALSAMixer(Mixer):
 
 MAX_LINEAR_DB_SCALE = 24
 SND_CTL_TLV_DB_GAIN_MUTE = -9999999
+
 
 def use_linear_db_scale(min_db, max_db):
     return max_db - min_db <= MAX_LINEAR_DB_SCALE * 100

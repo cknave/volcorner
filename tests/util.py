@@ -36,7 +36,7 @@ class SignalReceiver:
 
 def with_xvfb(f):
     """Decorator to set up and tear down an Xvfb test environment."""
-    import xcffib.xproto # Needed for an xcffib core to exist
+    import xcffib.xproto  # Needed for an xcffib core to exist
     xvfb = XvfbTest()
     return with_setup(setup=xvfb.setUp, teardown=xvfb.tearDown)(f)
 

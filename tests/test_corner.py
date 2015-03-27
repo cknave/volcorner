@@ -2,8 +2,8 @@
 
 from nose.tools import raises
 
-from volcorner import Rect, Size
-from volcorner.tracking import Corner
+from volcorner.rect import Rect, Size
+from volcorner.tracking.corner import Corner
 
 
 TEST_SCREEN = Size(100, 100)

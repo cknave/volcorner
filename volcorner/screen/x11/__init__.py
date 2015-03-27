@@ -1,1 +1,0 @@
-from .randr import RandRScreen

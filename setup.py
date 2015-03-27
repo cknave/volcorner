@@ -14,7 +14,7 @@ tests_require = [
 ]
 
 setup(name='volcorner',
-      version='0.1.0',
+      version='0.1.1',
       description='Volume hot corner utility',
       author='kvance',
       author_email='kvance@kvance.com',
@@ -37,7 +37,7 @@ setup(name='volcorner',
       ],
       entry_points={
           'console_scripts': [
-              'volcorner = volcorner.scripts.volcorner:main'
+              'volcorner = volcorner.scripts.main:main'
           ]
       },
       install_requires=requires,

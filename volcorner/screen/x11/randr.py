@@ -9,9 +9,9 @@ import xcffib.xproto
 import xcffib.randr
 from xcffib.randr import ScreenChangeNotifyEvent
 
-from volcorner import Size
-from volcorner.screen import Screen
-from volcorner.threading import PollThread
+from volcorner.rect import Size
+from volcorner.screen.screen import Screen
+from volcorner.threading.pollthread import PollThread
 
 _log = logging.getLogger("screen")
 

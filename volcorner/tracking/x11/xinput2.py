@@ -8,10 +8,10 @@ import xcffib
 from xcffib.xproto import ButtonPressEvent, EventMask, GeGenericEvent, GrabMode
 import xcffib.xinput
 
-from volcorner import Point
+from volcorner.rect import Point
 import volcorner.logging
-from volcorner.threading import PollThread, run_on_thread
-from volcorner.tracking import MouseTracker
+from volcorner.threading.pollthread import PollThread, run_on_thread
+from volcorner.tracking.tracker import MouseTracker
 
 
 _log = logging.getLogger("tracking")

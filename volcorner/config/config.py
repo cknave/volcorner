@@ -27,9 +27,8 @@ import sys
 from appdirs import AppDirs
 
 import volcorner.logging
-from volcorner.tracking import Corner
+from volcorner.tracking.corner import Corner
 from . import keys
-
 
 
 # Config file constants

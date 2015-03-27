@@ -7,7 +7,8 @@ import logging
 
 import smokesignal
 
-from volcorner import Rect, signals
+from volcorner.rect import Rect
+from volcorner import signals
 
 _log = logging.getLogger("tracking")
 

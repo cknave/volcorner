@@ -5,13 +5,14 @@ import logging
 
 import smokesignal
 
-from volcorner import signals, Size
-from volcorner.audio.alsa import ALSAMixer
-from volcorner.config import get_config, log_level_for_verbosity, write_config
+from volcorner import signals
+from volcorner.audio.alsa.alsamixer import ALSAMixer
+from volcorner.config.config import get_config, log_level_for_verbosity, write_config
 from volcorner.config.keys import CORNER, ACTIVATE_SIZE, DEACTIVATE_SIZE, VERBOSE
-from volcorner.screen.x11 import RandRScreen
-from volcorner.tracking import Corner
-from volcorner.tracking.x11 import XInput2MouseTracker
+from volcorner.rect import Size
+from volcorner.screen.x11.randr import RandRScreen
+from volcorner.tracking.corner import Corner
+from volcorner.tracking.x11.xinput2 import XInput2MouseTracker
 
 # Amount to step the volume per scroll event
 VOL_STEP = 0.05
