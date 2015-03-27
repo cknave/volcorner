@@ -14,7 +14,7 @@ tests_require = [
 ]
 
 setup(name='volcorner',
-      version='0.1.1',
+      version='0.1.2',
       description='Volume hot corner utility',
       author='kvance',
       author_email='kvance@kvance.com',
