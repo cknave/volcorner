@@ -5,7 +5,7 @@ import logging
 
 import smokesignal
 
-from volcorner import Rect, signals, Size
+from volcorner import signals, Size
 from volcorner.audio.alsa import ALSAMixer
 from volcorner.config import get_config, log_level_for_verbosity, write_config
 from volcorner.config.keys import CORNER, ACTIVATE_SIZE, DEACTIVATE_SIZE, VERBOSE

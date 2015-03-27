@@ -71,6 +71,9 @@ def get_config(argv=sys.argv[1:], app_dirs=APP_DIRS, defaults=DEFAULTS):
     if config_values:
         defaults.update(config_values)
 
+    # Coerce types
+    defaults['verbose'] = int(defaults['verbose'])
+
     # To get a flag name, prefix with '--' and replace '_' with '-'
     flag = lambda s: '--' + s.replace('_', '-')
 

@@ -4,3 +4,7 @@
 __pycache__
 .idea
 *.iml
+/build/
+/dist/
+/volcorner.egg-info/
+

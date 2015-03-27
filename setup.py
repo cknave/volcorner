@@ -1,4 +1,6 @@
-from setuptools import setup
+from setuptools import setup, find_packages
+
+import volcorner.audio.alsa.mixercffi
 
 requires = [
     'appdirs',
@@ -27,10 +29,15 @@ setup(name='volcorner',
           'Topic :: Multimedia :: Sound/Audio'
       ],
       keywords='volume hot corner hotcorner',
-      packages=['volcorner'],
+      packages=find_packages(),
+      # CFFI is not zip safe
+      zip_safe=False,
+      ext_modules=[
+          volcorner.audio.alsa.mixercffi.ffi.verifier.get_extension()
+      ],
       entry_points={
           'console_scripts': [
-              'volcorner = volcorner.main:main'
+              'volcorner = volcorner.scripts.volcorner:main'
           ]
       },
       install_requires=requires,
