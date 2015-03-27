@@ -8,7 +8,7 @@ System requirements
 
 * X11 with XInput2 and RANDR extensions
 * ALSA
-* Python 3.4
+* Python 3.4 with [CFFI](http://cffi.readthedocs.org/en/latest/)
 
 Usage
 -----
