@@ -7,7 +7,7 @@ import logging
 
 import smokesignal
 
-from fastvol import Rect, signals
+from volcorner import Rect, signals
 
 _log = logging.getLogger("tracking")
 

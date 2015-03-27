@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Fastvol volume changer."""
+"""volcorner volume changer."""
 
 import logging
 
 import smokesignal
 
-from fastvol import Rect, signals, Size
-from fastvol.audio.alsa import ALSAMixer
-from fastvol.config import get_config, log_level_for_verbosity, write_config
-from fastvol.config.keys import CORNER, ACTIVATE_SIZE, DEACTIVATE_SIZE, VERBOSE
-from fastvol.screen.x11 import RandRScreen
-from fastvol.tracking import Corner
-from fastvol.tracking.x11 import XInput2MouseTracker
+from volcorner import Rect, signals, Size
+from volcorner.audio.alsa import ALSAMixer
+from volcorner.config import get_config, log_level_for_verbosity, write_config
+from volcorner.config.keys import CORNER, ACTIVATE_SIZE, DEACTIVATE_SIZE, VERBOSE
+from volcorner.screen.x11 import RandRScreen
+from volcorner.tracking import Corner
+from volcorner.tracking.x11 import XInput2MouseTracker
 
 # Amount to step the volume per scroll event
 VOL_STEP = 0.05
@@ -24,8 +24,8 @@ class FVol:
         """
         Initialize the app.
 
-        :param config: the configuration from fastvol.config.get_config()
-        :param config_path: the configuration file path from fastvol.config.get_config()
+        :param config: the configuration from volcorner.config.get_config()
+        :param config_path: the configuration file path from volcorner.config.get_config()
         """
         self.config = config
         self.config_path = config_path

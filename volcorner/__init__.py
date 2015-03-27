@@ -1,4 +1,4 @@
-"""Fastvol volume changer."""
+"""volcorner volume changer."""
 
 __all__ = [
     "audio",

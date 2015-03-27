@@ -5,7 +5,7 @@ __all__ = ['Mixer']
 from abc import ABCMeta, abstractmethod
 import smokesignal
 
-from fastvol import signals
+from volcorner import signals
 
 
 class Mixer(metaclass=ABCMeta):

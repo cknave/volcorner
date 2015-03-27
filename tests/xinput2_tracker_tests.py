@@ -2,8 +2,8 @@
 
 import subprocess
 
-from fastvol import Rect, signals
-from fastvol.tracking.x11 import XInput2MouseTracker
+from volcorner import Rect, signals
+from volcorner.tracking.x11 import XInput2MouseTracker
 from .util import SignalReceiver, with_xte, with_xvfb
 
 TEST_AREA = Rect.make(64, 64, 1, 1)

@@ -1,7 +1,7 @@
 """Abstract base mixer tests."""
-from fastvol import signals
+from volcorner import signals
 
-from fastvol.audio.mixer import Mixer
+from volcorner.audio.mixer import Mixer
 from tests.util import SignalReceiver
 
 

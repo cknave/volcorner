@@ -2,9 +2,9 @@
 
 from nose import with_setup
 
-from fastvol import signals
-from fastvol.rect import Rect, Point
-from fastvol.tracking.tracker import MouseTracker
+from volcorner import signals
+from volcorner.rect import Rect, Point
+from volcorner.tracking.tracker import MouseTracker
 from .util import SignalReceiver
 
 

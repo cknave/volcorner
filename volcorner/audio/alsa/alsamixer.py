@@ -7,7 +7,7 @@ import math
 import os
 import threading
 
-from fastvol.audio import Mixer
+from volcorner.audio import Mixer
 from . import mixercffi
 
 _log = logging.getLogger("audio")

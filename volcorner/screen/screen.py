@@ -3,7 +3,7 @@
 import smokesignal
 
 from abc import ABCMeta, abstractmethod
-from fastvol import Size, signals
+from volcorner import Size, signals
 
 
 class Screen(metaclass=ABCMeta):

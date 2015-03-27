@@ -26,17 +26,17 @@ import sys
 
 from appdirs import AppDirs
 
-import fastvol.logging
-from fastvol.tracking import Corner
+import volcorner.logging
+from volcorner.tracking import Corner
 from . import keys
 
 
 
 # Config file constants
-APP_NAME = 'Fastvol'
+APP_NAME = 'volcorner'
 APP_AUTHOR = 'kvance.com'
 APP_DIRS = AppDirs(APP_NAME, APP_AUTHOR)
-FILENAME = 'fastvol.conf'
+FILENAME = 'volcorner.conf'
 
 # Config file sections
 SECTION_DEFAULTS = 'Defaults'
@@ -193,7 +193,7 @@ def log_level_for_verbosity(verbosity):
     elif verbosity == 2:
         return logging.DEBUG
     elif verbosity == 3:
-        return fastvol.logging.TRACE
+        return volcorner.logging.TRACE
 
 
 def _user_config_file_path(app_dirs=APP_DIRS):
