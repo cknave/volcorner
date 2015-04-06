@@ -81,11 +81,15 @@ class FVol:
 
     def on_scroll_up(self):
         """Increment the volume."""
-        self.mixer.volume = min(1.0, self.mixer.volume + VOL_STEP)
+        value = min(1.0, self.mixer.volume + VOL_STEP)
+        _log.info("Increasing volume to %.02f", value)
+        self.mixer.volume = value
 
     def on_scroll_down(self):
         """Decrement the volume."""
-        self.mixer.volume = max(0.0, self.mixer.volume - VOL_STEP)
+        value = max(0.0, self.mixer.volume - VOL_STEP)
+        _log.info("Decreasing volume to %.02f", value)
+        self.mixer.volume = value
 
     def on_change_resolution(self, screen_size):
         self._update_tracking_regions()
