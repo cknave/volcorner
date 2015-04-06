@@ -1,6 +1,6 @@
 *.pyc
 *.swp
-.env
+.venv
 __pycache__
 .idea
 *.iml
