@@ -104,7 +104,8 @@ class XInput2MouseTracker(MouseTracker):
     def _ungrab_button(self, button):
         """Ungrab all events for this button."""
         _log.debug("Ungrabbing button %s", button)
-        self._conn.core.UngrabButton(button, self._root, 0)
+        modifiers = ModMask.Any
+        self._conn.core.UngrabButton(button, self._root, modifiers)
 
     def _tracker_loop(self):
         """Thread main loop."""

@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.1.3] - 2015-04-12
+### Fixed
+- Fix ungrabbing mouse wheel with any modifier
+
 ## [0.1.2] - 2015-04-12
 ### Added
 - Volume setting is now logged
@@ -20,3 +24,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 [unreleased]: https://github.com/cknave/volcorner/compare/volcorner-0.1.1...HEAD
 [0.1.1]: https://github.com/cknave/volcorner/compare/volcorner-0.1.0...volcorner-0.1.1
 [0.1.2]: https://github.com/cknave/volcorner/compare/volcorner-0.1.1...volcorner-0.1.2
+[0.1.3]: https://github.com/cknave/volcorner/compare/volcorner-0.1.2...volcorner-0.1.3
