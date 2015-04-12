@@ -10,6 +10,17 @@ System requirements
 * ALSA
 * Python 3.4 with [CFFI](http://cffi.readthedocs.org/en/latest/)
 
+Installation
+------------
+
+CFFI is required to run the setup script.  Make sure it's installed first:
+
+    pip install cffi
+
+pip can install the remaining dependencies:
+
+    pip install volcorner
+
 Usage
 -----
 
