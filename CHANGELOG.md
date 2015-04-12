@@ -4,13 +4,17 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased][unreleased]
 ### Added
-- Volume setting is now logged
 ### Changed
 ### Deprecated
 ### Removed
 ### Fixed
-- Mouse wheel is grabbed regardless of any X modifier flags
 ### Security
+
+## [0.1.2] - 2015-04-12
+### Added
+- Volume setting is now logged
+### Fixed
+- Mouse wheel is grabbed regardless of any X modifier flags
 
 ## [0.1.1] - 2015-03-27
 ### Fixed
@@ -23,3 +27,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 [unreleased]: https://github.com/cknave/volcorner/compare/volcorner-0.1.1...HEAD
 [0.1.1]: https://github.com/cknave/volcorner/compare/volcorner-0.1.0...volcorner-0.1.1
+[0.1.2]: https://github.com/cknave/volcorner/compare/volcorner-0.1.1...volcorner-0.1.2
