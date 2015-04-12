@@ -5,7 +5,7 @@ __all__ = ['XInput2MouseTracker']
 import logging
 
 import xcffib
-from xcffib.xproto import ButtonPressEvent, EventMask, GeGenericEvent, GrabMode
+from xcffib.xproto import ButtonPressEvent, EventMask, GeGenericEvent, GrabMode, ModMask
 import xcffib.xinput
 
 from volcorner.rect import Point
@@ -98,7 +98,8 @@ class XInput2MouseTracker(MouseTracker):
         _log.debug("Grabbing button %s", button)
         events = EventMask.ButtonPress | EventMask.ButtonRelease
         mode = GrabMode.Async
-        self._conn.core.GrabButton(0, self._root, events, mode, mode, 0, 0, button, 0)
+        modifiers = ModMask.Any
+        self._conn.core.GrabButton(0, self._root, events, mode, mode, 0, 0, button, modifiers)
 
     def _ungrab_button(self, button):
         """Ungrab all events for this button."""
