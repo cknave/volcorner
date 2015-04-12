@@ -4,10 +4,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased][unreleased]
 ### Added
+- Volume setting is now logged
 ### Changed
 ### Deprecated
 ### Removed
 ### Fixed
+- Mouse wheel is grabbed regardless of any X modifier flags
 ### Security
 
 ## [0.1.1] - 2015-03-27
