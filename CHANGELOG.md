@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Deprecated
 ### Removed
 ### Fixed
+- Fix ungrabbing mouse wheel with any modifier
 ### Security
 
 ## [0.1.2] - 2015-04-12
