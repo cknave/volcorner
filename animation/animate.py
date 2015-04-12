@@ -37,32 +37,36 @@ def main():
 
     animations = {}
 
-    def animate():
-        timeline = QtCore.QTimeLine(400)
-        timeline.setUpdateInterval(16)
-        timeline.setEasingCurve(QtCore.QEasingCurve.OutQuad)
+    def animate(scale1, scale2, rotate1, rotate2, easing, duration=300, interval=16,
+                segment_step=0.2):
+        timeline = QtCore.QTimeLine(duration)
+        timeline.setUpdateInterval(interval)
+        timeline.setEasingCurve(easing)
 
         scale = QtGui.QGraphicsItemAnimation()
         scale.setItem(background)
         scale.setTimeLine(timeline)
-        scale.setScaleAt(0.0, 0.0, 0.0)
-        scale.setScaleAt(1.0, 1.0, 1.0)
+        scale.setScaleAt(0.0, scale1, scale1)
+        scale.setScaleAt(1.0, scale2, scale2)
         animations['scale'] = scale  # Prevent GC
 
-        STEP = 0.2
         for i, segment in enumerate(reversed(segments)):
             rotate = QtGui.QGraphicsItemAnimation()
             rotate.setItem(segment)
             rotate.setTimeLine(timeline)
-            rotate.setRotationAt(0.0, -90.0)
-            rotate.setRotationAt(0.0 + STEP * i, -90.0)
-            rotate.setRotationAt(1.0, 0.0)
+            rotate.setRotationAt(0.0, rotate1)
+            rotate.setRotationAt(0.0 + segment_step * i, rotate1)
+            rotate.setRotationAt(1.0, rotate2)
             animations['rotate{}'.format(i)] = rotate  # Prevent GC
 
         timeline.start()
 
-    view.mousePressEvent = lambda e: animate()
+    view.enterEvent = lambda e: animate(scale1=0.0, scale2=1.0, rotate1=-90.0, rotate2=0.0,
+                                        easing=QtCore.QEasingCurve.OutQuad)
+    view.leaveEvent = lambda e: animate(scale1=1.0, scale2=0.0, rotate1=0.0, rotate2=90.0,
+                                        easing=QtCore.QEasingCurve.InQuad)
 
+    # TODO: use timeline finished signal to queue up next animation
 
     sys.exit(app.exec_())
 
