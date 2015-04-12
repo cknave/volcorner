@@ -17,7 +17,7 @@ CFFI is required to run the setup script.  Make sure it's installed first:
 
     pip install cffi
 
-pip can install the remaining dependencies:
+pip can then install volcorner along with the remaining dependencies:
 
     pip install volcorner
 
