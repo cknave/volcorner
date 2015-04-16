@@ -30,7 +30,8 @@ def main():
 
     # Load images
     bg_pixmap = QtGui.QPixmap("background.png")
-    segments = [SegmentItem("segment{}.png".format(i)) for i in range(0, 5)]
+    segments = [SegmentItem("segment_full0.png")] + \
+               [SegmentItem("segment_empty{}.png".format(i)) for i in range(1, 5)]
 
     # Place in scene
     scene = QtGui.QGraphicsScene()
