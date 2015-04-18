@@ -11,42 +11,106 @@ from PyQt4 import QtGui
 class SegmentItem(QtGui.QGraphicsItem):
     def __init__(self, empty_filename, full_filename):
         super().__init__()
-        self.empty = QtGui.QPixmap(empty_filename)
-        self.full = QtGui.QPixmap(full_filename)
-        self.mask = self.full.mask()
-        self.travel = self._find_total_travel(self.full, self.mask)
+        self._empty = QtGui.QPixmap(empty_filename)
+        self._full = QtGui.QPixmap(full_filename)
+        self._buffer = bytearray(self.full.width() * self.full.height() * 4)  # WxH 32bpp buffer
+        self.travel = self._find_total_travel(self.full, self.buffer)
         self._value = 1.0
+        self._update_image()
+
+    @property
+    def empty(self):
+        return self._empty
+
+    @property
+    def full(self):
+        return self._full
+
+    @property
+    def buffer(self):
+        return self._buffer
 
     @property
     def value(self):
         return self._value
 
     @value.setter
-    def set_value(self, value):
+    def value(self, value):
         if value != self._value:
             self._value = value
+            self._update_image()
             self.update()  # Trigger a repaint
 
-    def paint(self, painter, option, widget):
+    def paint(self, painter, option, widget=None):
         """
         Draw the segment.
 
         :param QtGui.QPainter painter: the painter
         """
-        # painter.drawPixmap(0, 0, self.full)
-        # TODO: fill with value (0-1)
-        # Test mask
-        painter.drawPixmap(0, 0, self.empty)
-        painter.setClipRegion(QtGui.QRegion(self.mask))
-        painter.translate(-5, -5)
-        painter.drawPixmap(0, 0, self.full)
+        if isinstance(self.image, QtGui.QPixmap):
+            painter.drawPixmap(0, 0, self.image)
+        else:
+            painter.drawImage(0, 0, self.image)
 
     def boundingRect(self):
         return QtCore.QRectF(0, 0, self.full.width(), self.full.height())
 
-    @staticmethod
-    def _find_total_travel(full, mask):
-        return 10  # TODO: keep offsetting full until no pixels are drawn
+    def _update_image(self):
+        # Special case: for 0.0, just use the empty pixmap
+        if self._value == 0.0:
+            self.image = self.empty
+            return
+
+        # Special case: for 1.0, draw full over top of empty, no masking needed
+        if self._value == 1.0:
+            self.image = QtGui.QImage(self.full.size(), QtGui.QImage.Format_ARGB32_Premultiplied)
+            painter = QtGui.QPainter(self.image)
+            painter.drawPixmap(0, 0, self.empty)
+            painter.drawPixmap(0, 0, self.full)
+            return
+
+        # Create a custom image for values in between.
+        self.image = self._make_image(self.empty, self.full, self.buffer, self._value, self.travel)
+
+    @classmethod
+    def _make_image(cls, empty, full, buffer, value, travel):
+        # Create a new image.
+        image = QtGui.QImage(buffer, full.width(), full.height(), QtGui.QImage.Format_ARGB32_Premultiplied)
+        image.fill(0)
+        painter = QtGui.QPainter(image)
+
+        # Draw the full image to use its alpha channel.
+        painter.drawPixmap(0, 0, full)
+
+        # Draw the full image into the alpha channel, offset by the current value.
+        painter.setCompositionMode(QtGui.QPainter.CompositionMode_SourceIn)
+        offset = 0 - int((1.0 - value) * travel)
+        painter.drawPixmap(offset, offset, full)
+
+        # Draw the empty image behind the partial full image.
+        if empty is not None:
+            painter.setCompositionMode(QtGui.QPainter.CompositionMode_DestinationOver)
+            painter.drawPixmap(0, 0, empty)
+        return image
+
+    @classmethod
+    def _find_total_travel(cls, full, buffer):
+        # Keep offsetting travel further until the resulting image is empty
+        for travel in range(1, full.width()):
+            image = cls._make_image(None, full, buffer, 0.0, travel)
+            if cls._image_is_empty(image):
+                return travel
+        # No?  Offset the entire image then.
+        return full.width()
+
+    @classmethod
+    def _image_is_empty(cls, image):
+        for y in range(0, image.height()):
+            for x in range(0, image.width()):
+                pixel = image.pixel(x, y)
+                if QtGui.qAlpha(pixel) > 0:
+                    return False
+        return True
 
 
 def set_segment_values(segments, value):
@@ -73,6 +137,11 @@ def main():
     image_pairs = [tuple(s.format(i) for s in ("segment_empty{}.png", "segment_full{}.png"))
                    for i in range(1, 5)]
     segments = [SegmentItem(*pair) for pair in image_pairs]
+
+    # Set some test values
+    for i, segment in enumerate(segments):
+        segment.value = float(i) / (len(segments) - 1)
+        print(i, segment.value)
 
     # Place in scene
     scene = QtGui.QGraphicsScene()
@@ -113,8 +182,7 @@ def main():
 
     animations = {}
 
-    def animate(scale1, scale2, rotate1, rotate2, easing, duration=300, interval=16,
-                segment_step=0.2):
+    def animate(scale1, scale2, rotate1, rotate2, easing, duration=300, interval=16, segment_step=0.2):
         timeline = QtCore.QTimeLine(duration)
         timeline.setUpdateInterval(interval)
         timeline.setEasingCurve(easing)
