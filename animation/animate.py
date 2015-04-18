@@ -9,17 +9,56 @@ from PyQt4 import QtGui
 
 
 class SegmentItem(QtGui.QGraphicsItem):
-    def __init__(self, filename):
+    def __init__(self, empty_filename, full_filename):
         super().__init__()
-        self.pixmap = QtGui.QPixmap(filename)
-        self.value = 1.0
+        self.empty = QtGui.QPixmap(empty_filename)
+        self.full = QtGui.QPixmap(full_filename)
+        self.mask = self.full.mask()
+        self.travel = self._find_total_travel(self.full, self.mask)
+        self._value = 1.0
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def set_value(self, value):
+        if value != self._value:
+            self._value = value
+            self.update()  # Trigger a repaint
 
     def paint(self, painter, option, widget):
-        painter.drawPixmap(0, 0, self.pixmap)
+        """
+        Draw the segment.
+
+        :param QtGui.QPainter painter: the painter
+        """
+        # painter.drawPixmap(0, 0, self.full)
         # TODO: fill with value (0-1)
+        # Test mask
+        painter.drawPixmap(0, 0, self.empty)
+        painter.setClipRegion(QtGui.QRegion(self.mask))
+        painter.translate(-5, -5)
+        painter.drawPixmap(0, 0, self.full)
 
     def boundingRect(self):
-        return QtCore.QRectF(0, 0, self.pixmap.width(), self.pixmap.height())
+        return QtCore.QRectF(0, 0, self.full.width(), self.full.height())
+
+    @staticmethod
+    def _find_total_travel(full, mask):
+        return 10  # TODO: keep offsetting full until no pixels are drawn
+
+
+def set_segment_values(segments, value):
+    assert 0.0 <= value <= 1.0
+    step = 1.0 / len(segments)
+    for i, segment in enumerate(segments):
+        relative_value = (value - i * step) / step
+        segment.value = clamp(0.0, relative_value, 1.0)
+
+
+def clamp(minimum, value, maximum):
+    return max(minimum, min(maximum, value))
 
 
 def main():
@@ -30,12 +69,15 @@ def main():
 
     # Load images
     bg_pixmap = QtGui.QPixmap("background.png")
-    segments = [SegmentItem("segment_full0.png")] + \
-               [SegmentItem("segment_empty{}.png".format(i)) for i in range(1, 5)]
+    dot_pixmap = QtGui.QPixmap("segment_full0.png")
+    image_pairs = [tuple(s.format(i) for s in ("segment_empty{}.png", "segment_full{}.png"))
+                   for i in range(1, 5)]
+    segments = [SegmentItem(*pair) for pair in image_pairs]
 
     # Place in scene
     scene = QtGui.QGraphicsScene()
     background = scene.addPixmap(bg_pixmap)
+    dot = scene.addPixmap(dot_pixmap)
     for segment in segments:
         scene.addItem(segment)
 
@@ -49,6 +91,11 @@ def main():
     view.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
     view.setAttribute(Qt.WA_TranslucentBackground)
     view.setFrameStyle(QtGui.QFrame.NoFrame)
+
+    # This doesn't seem to have any effect
+    view.setRenderHint(QtGui.QPainter.Antialiasing)
+    view.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
+
     view.show()
 
     # Use negative scale (and sometimes transform) to flip
@@ -79,7 +126,7 @@ def main():
         scale.setScaleAt(1.0, scale2, scale2)
         animations['scale'] = scale  # Prevent GC
 
-        for i, segment in enumerate(reversed(segments)):
+        for i, segment in enumerate(reversed([dot] + segments)):
             rotate = QtGui.QGraphicsItemAnimation()
             rotate.setItem(segment)
             rotate.setTimeLine(timeline)
