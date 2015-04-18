@@ -63,7 +63,8 @@ class SegmentItem(QtGui.QGraphicsItem):
 
         # Special case: for 1.0, draw full over top of empty, no masking needed
         if self._value == 1.0:
-            self.image = QtGui.QImage(self.full.size(), QtGui.QImage.Format_ARGB32_Premultiplied)
+            self.image = QtGui.QImage(self.buffer, self.full.width(), self.full.height(),
+                                      QtGui.QImage.Format_ARGB32_Premultiplied)
             painter = QtGui.QPainter(self.image)
             painter.drawPixmap(0, 0, self.empty)
             painter.drawPixmap(0, 0, self.full)
@@ -138,11 +139,6 @@ def main():
                    for i in range(1, 5)]
     segments = [SegmentItem(*pair) for pair in image_pairs]
 
-    # Set some test values
-    for i, segment in enumerate(segments):
-        segment.value = float(i) / (len(segments) - 1)
-        print(i, segment.value)
-
     # Place in scene
     scene = QtGui.QGraphicsScene()
     background = scene.addPixmap(bg_pixmap)
@@ -160,11 +156,6 @@ def main():
     view.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
     view.setAttribute(Qt.WA_TranslucentBackground)
     view.setFrameStyle(QtGui.QFrame.NoFrame)
-
-    # This doesn't seem to have any effect
-    view.setRenderHint(QtGui.QPainter.Antialiasing)
-    view.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
-
     view.show()
 
     # Use negative scale (and sometimes transform) to flip
@@ -211,6 +202,24 @@ def main():
                                         easing=QtCore.QEasingCurve.InQuad)
 
     # TODO: use timeline finished signal to queue up next animation
+
+    # Periodically change the value.
+    global current_value, increment
+    current_value = 0.0
+    increment = 0.05
+
+    def update_value():
+        global current_value, increment
+        current_value += increment
+        if current_value < 0.0:
+            current_value = 0.0
+            increment = 0 - increment
+        if current_value > 1.0:
+            current_value = 1.0
+            increment = 0 - increment
+        set_segment_values(segments, current_value)
+        QtCore.QTimer.singleShot(250, update_value)
+    update_value()
 
     sys.exit(app.exec_())
 
