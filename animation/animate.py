@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 import signal
 import sys
 
@@ -9,12 +10,12 @@ from PyQt4 import QtGui
 
 
 class SegmentItem(QtGui.QGraphicsItem):
-    def __init__(self, empty_filename, full_filename):
+    def __init__(self, config_json):
         super().__init__()
-        self._empty = QtGui.QPixmap(empty_filename)
-        self._full = QtGui.QPixmap(full_filename)
+        self._empty = QtGui.QPixmap(config_json['empty'])
+        self._full = QtGui.QPixmap(config_json['full'])
         self._buffer = bytearray(self.full.width() * self.full.height() * 4)  # WxH 32bpp buffer
-        self.travel = self._find_total_travel(self.full, self.buffer)
+        self.travel = config_json['travel']
         self._value = 1.0
         self._update_image()
 
@@ -94,25 +95,6 @@ class SegmentItem(QtGui.QGraphicsItem):
             painter.drawPixmap(0, 0, empty)
         return image
 
-    @classmethod
-    def _find_total_travel(cls, full, buffer):
-        # Keep offsetting travel further until the resulting image is empty
-        for travel in range(1, full.width()):
-            image = cls._make_image(None, full, buffer, 0.0, travel)
-            if cls._image_is_empty(image):
-                return travel
-        # No?  Offset the entire image then.
-        return full.width()
-
-    @classmethod
-    def _image_is_empty(cls, image):
-        for y in range(0, image.height()):
-            for x in range(0, image.width()):
-                pixel = image.pixel(x, y)
-                if QtGui.qAlpha(pixel) > 0:
-                    return False
-        return True
-
 
 def set_segment_values(segments, value):
     assert 0.0 <= value <= 1.0
@@ -135,9 +117,9 @@ def main():
     # Load images
     bg_pixmap = QtGui.QPixmap("background.png")
     dot_pixmap = QtGui.QPixmap("segment_full0.png")
-    image_pairs = [tuple(s.format(i) for s in ("segment_empty{}.png", "segment_full{}.png"))
-                   for i in range(1, 5)]
-    segments = [SegmentItem(*pair) for pair in image_pairs]
+    with open('segments.json') as config_file:
+        config_json = json.load(config_file)
+    segments = [SegmentItem(segment_config) for segment_config in config_json['segments']]
 
     # Place in scene
     scene = QtGui.QGraphicsScene()
