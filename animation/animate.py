@@ -12,24 +12,21 @@ from PyQt4 import QtGui
 class SegmentItem(QtGui.QGraphicsItem):
     def __init__(self, config_json):
         super().__init__()
-        self._empty = QtGui.QPixmap(config_json['empty'])
-        self._full = QtGui.QPixmap(config_json['full'])
-        self._buffer = bytearray(self.full.width() * self.full.height() * 4)  # WxH 32bpp buffer
+        # Convert the PIL bbox into a QRectF and QRect (both are annoyingly needed)
+        json_bbox = config_json['bbox']
+        self.bboxf = QtCore.QRectF(json_bbox[0],
+                                   json_bbox[1],
+                                   json_bbox[2] - json_bbox[0],
+                                   json_bbox[3] - json_bbox[1])
+        self.bbox = self.bboxf.toAlignedRect()
+        # Load the images, cropping to their bounding box
+        self.empty = self._cropped_image(config_json['empty'], self.bbox)
+        self.full = self._cropped_image(config_json['full'], self.bbox)
         self.travel = config_json['travel']
+        # Set a default value
         self._value = 1.0
+        # Create the image combined image
         self._update_image()
-
-    @property
-    def empty(self):
-        return self._empty
-
-    @property
-    def full(self):
-        return self._full
-
-    @property
-    def buffer(self):
-        return self._buffer
 
     @property
     def value(self):
@@ -48,13 +45,10 @@ class SegmentItem(QtGui.QGraphicsItem):
 
         :param QtGui.QPainter painter: the painter
         """
-        if isinstance(self.image, QtGui.QPixmap):
-            painter.drawPixmap(0, 0, self.image)
-        else:
-            painter.drawImage(0, 0, self.image)
+        painter.drawPixmap(self.bbox.topLeft(), self.image)
 
     def boundingRect(self):
-        return QtCore.QRectF(0, 0, self.full.width(), self.full.height())
+        return self.bboxf
 
     def _update_image(self):
         # Special case: for 0.0, just use the empty pixmap
@@ -62,22 +56,16 @@ class SegmentItem(QtGui.QGraphicsItem):
             self.image = self.empty
             return
 
-        # Special case: for 1.0, draw full over top of empty, no masking needed
-        if self._value == 1.0:
-            self.image = QtGui.QImage(self.buffer, self.full.width(), self.full.height(),
-                                      QtGui.QImage.Format_ARGB32_Premultiplied)
-            painter = QtGui.QPainter(self.image)
-            painter.drawPixmap(0, 0, self.empty)
-            painter.drawPixmap(0, 0, self.full)
-            return
-
-        # Create a custom image for values in between.
-        self.image = self._make_image(self.empty, self.full, self.buffer, self._value, self.travel)
+        # Combine the empty and an offset full image to make the image for a value.
+        self.image = self._make_image(self.empty, self.full, self._value, self.travel)
 
     @classmethod
-    def _make_image(cls, empty, full, buffer, value, travel):
+    def _make_image(cls, empty, full, value, travel):
+        width = empty.width()
+        height = empty.height()
         # Create a new image.
-        image = QtGui.QImage(buffer, full.width(), full.height(), QtGui.QImage.Format_ARGB32_Premultiplied)
+        buffer = bytearray(width * height * 4)  # QImage is 4 bytes/pixel
+        image = QtGui.QImage(buffer, width, height, QtGui.QImage.Format_ARGB32_Premultiplied)
         image.fill(0)
         painter = QtGui.QPainter(image)
 
@@ -89,11 +77,26 @@ class SegmentItem(QtGui.QGraphicsItem):
         offset = 0 - int((1.0 - value) * travel)
         painter.drawPixmap(offset, offset, full)
 
+        # Clear any remaining parts of the full image beyond the drawn rectangle.
+        right_edge = full.width() + offset
+        bottom_edge = full.height() + offset
+        right_margin = QtCore.QRect(right_edge, 0, -offset, full.height())
+        bottom_margin = QtCore.QRect(0, bottom_edge, full.width() + offset, -offset)
+        painter.setCompositionMode(QtGui.QPainter.CompositionMode_Source)
+        painter.fillRect(right_margin, Qt.transparent)
+        painter.fillRect(bottom_margin, Qt.transparent)
+
         # Draw the empty image behind the partial full image.
-        if empty is not None:
-            painter.setCompositionMode(QtGui.QPainter.CompositionMode_DestinationOver)
-            painter.drawPixmap(0, 0, empty)
-        return image
+        painter.setCompositionMode(QtGui.QPainter.CompositionMode_DestinationOver)
+        painter.drawPixmap(0, 0, empty)
+        del painter  # Prevent PyQt crash
+        return QtGui.QPixmap.fromImage(image)
+
+    @classmethod
+    def _cropped_image(cls, filename, bbox):
+        image = QtGui.QImage(filename)
+        cropped = image.copy(bbox)
+        return QtGui.QPixmap.fromImage(cropped)
 
 
 def set_segment_values(segments, value):

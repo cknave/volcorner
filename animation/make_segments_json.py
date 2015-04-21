@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import sys
 
 from PIL import Image, ImageChops, ImageDraw
 
@@ -19,7 +20,7 @@ def main():
                     'empty': empty,
                     'full': full,
                     'travel': find_max_travel(full),
-                    'bbox': find_bbox(full)
+                    'bbox': find_bbox(empty, full)
                 }
                 for empty, full in IMAGE_PAIRS
             ]
@@ -55,10 +56,20 @@ def image_is_empty(image):
     return alpha.getbbox() is None
 
 
-def find_bbox(full_filename):
-    full = Image.open(full_filename)
-    alpha = full.split()[-1]
-    return alpha.getbbox()
+def find_bbox(*filenames):
+    min_x = sys.maxsize
+    min_y = sys.maxsize
+    max_x = -sys.maxsize - 1
+    max_y = -sys.maxsize - 1
+    for filename in filenames:
+        image = Image.open(filename)
+        alpha = image.split()[-1]
+        bbox = alpha.getbbox()
+        min_x = min(min_x, bbox[0])
+        min_y = min(min_y, bbox[1])
+        max_x = max(max_x, bbox[2])
+        max_y = max(max_y, bbox[3])
+    return (min_x, min_y, max_x, max_y)
 
 
 if __name__ == '__main__':
