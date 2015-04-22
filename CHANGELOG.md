@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased][unreleased]
 ### Added
 ### Changed
+- Somewhat flatten module hierarchy
+
 ### Deprecated
 ### Removed
 ### Fixed

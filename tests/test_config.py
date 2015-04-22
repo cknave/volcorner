@@ -1,13 +1,13 @@
 """Config file tests."""
 
 from argparse import ArgumentParser
-from collections import namedtuple
 import configparser
+
+from collections import namedtuple
 import os
 import random
 from tempfile import TemporaryDirectory
-
-import volcorner.config.config
+import volcorner.config
 
 
 MockAppDirs = namedtuple("MockAppDirs", "user_config_dir")
@@ -23,17 +23,17 @@ def test_write_default_config():
     defaults = {'key': 'value'}
     with TemporaryDirectory() as tmpdir:
         path = os.path.join(tmpdir, 'newdir', 'config')
-        volcorner.config.config.create_default_config(path, defaults)
+        volcorner.config.create_default_config(path, defaults)
         config = configparser.ConfigParser()
         config.read(path)
-        assert config[volcorner.config.config.SECTION_DEFAULTS]['key'] == 'value'
+        assert config[volcorner.config.SECTION_DEFAULTS]['key'] == 'value'
 
 
 def test_write_default_config_existing_dir():
     """Test writing the default configuration file in a directory that already exists."""
     with TemporaryDirectory() as tmpdir:
         path = os.path.join(tmpdir, 'config')
-        volcorner.config.config.create_default_config(path, {})
+        volcorner.config.create_default_config(path, {})
 
 
 def test_write_default_config_ignores_mkdir_error():
@@ -41,7 +41,7 @@ def test_write_default_config_ignores_mkdir_error():
     with TemporaryDirectory() as tmpdir:
         os.chmod(tmpdir, 0o500)  # Remove write permission
         path = os.path.join(tmpdir, 'newdir', 'config')
-        volcorner.config.config.create_default_config(path, {})
+        volcorner.config.create_default_config(path, {})
         assert not os.path.exists(path)
 
 
@@ -50,7 +50,7 @@ def test_write_default_config_ignores_write_error():
     with TemporaryDirectory() as tmpdir:
         os.chmod(tmpdir, 0o500)  # Remove write permission
         path = os.path.join(tmpdir, 'config')
-        volcorner.config.config.create_default_config(path, {})
+        volcorner.config.create_default_config(path, {})
         assert not os.path.exists(path)
 
 
@@ -61,7 +61,7 @@ def test_read_config():
         with open(path, 'w') as config_file:
             config_file.write(TEST_CONFIG)
 
-        config = volcorner.config.config.read_config_file(config_file.name)
+        config = volcorner.config.read_config_file(config_file.name)
         assert config['key'] == 'value'
 
 
@@ -72,14 +72,14 @@ def test_read_malformed_config_returns_none():
         with open(path, 'w') as config_file:
             config_file.write("[malformed")
 
-        config = volcorner.config.config.read_config_file(config_file.name)
+        config = volcorner.config.read_config_file(config_file.name)
         assert config is None
 
 
 def test_read_nonexistent_config_returns_none():
     """Test reading a nonexistent configuration file returns None."""
     path = "/does_not_exist_" + str(random.getrandbits(64))
-    config = volcorner.config.config.read_config_file(path)
+    config = volcorner.config.read_config_file(path)
     assert config is None
 
 
@@ -89,8 +89,8 @@ def test_config_file_path_creates_default_config():
     parser.add_argument('-c', '--config-file')
     with TemporaryDirectory() as tmpdir:
         app_dirs = MockAppDirs(tmpdir)
-        path, _ = volcorner.config.config.config_file_path(parser, [], app_dirs)
-        assert path == os.path.join(tmpdir, volcorner.config.config.FILENAME)
+        path, _ = volcorner.config.config_file_path(parser, [], app_dirs)
+        assert path == os.path.join(tmpdir, volcorner.config.FILENAME)
         assert os.path.exists(path)
 
 
@@ -101,8 +101,8 @@ def test_override_config_file_path():
     args = ['--config-file=/overridden']
     with TemporaryDirectory() as tmpdir:
         app_dirs = MockAppDirs(tmpdir)
-        path, _ = volcorner.config.config.config_file_path(parser, args, app_dirs)
+        path, _ = volcorner.config.config_file_path(parser, args, app_dirs)
         assert path == "/overridden"
-        user_path = os.path.join(tmpdir, volcorner.config.config.FILENAME)
+        user_path = os.path.join(tmpdir, volcorner.config.FILENAME)
         assert not os.path.exists(user_path)
 
