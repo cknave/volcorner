@@ -16,10 +16,10 @@ from volcorner.x11.xinput2tracker import XInput2MouseTracker
 # Amount to step the volume per scroll event
 VOL_STEP = 0.05
 
-_log = logging.getLogger("fvol")
+_log = logging.getLogger("volcorner")
 
 
-class FVol:
+class Volcorner:
     def __init__(self, config, config_path):
         """
         Initialize the app.
@@ -91,6 +91,7 @@ class FVol:
         self.mixer.volume = value
 
     def on_change_resolution(self, screen_size):
+        """Update the tracking regions for the new resolution."""
         self._update_tracking_regions()
 
     def _process_config(self, config):
@@ -134,8 +135,8 @@ def main():
     """Main function."""
     # Load configuration.
     config, config_path = get_config()
-    fvol = FVol(config, config_path)
-    fvol.run()
+    volcorner = Volcorner(config, config_path)
+    volcorner.run()
 
 if __name__ == '__main__':
     main()
