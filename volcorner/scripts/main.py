@@ -4,23 +4,22 @@
 import logging
 
 import smokesignal
-
 from volcorner import signals
-from volcorner.audio.alsa.alsamixer import ALSAMixer
-from volcorner.config.config import get_config, log_level_for_verbosity, write_config
-from volcorner.config.keys import CORNER, ACTIVATE_SIZE, DEACTIVATE_SIZE, VERBOSE
+from volcorner.alsa.alsamixer import ALSAMixer
+from volcorner.config import get_config, log_level_for_verbosity, write_config
+from volcorner.config import KEY_CORNER, KEY_ACTIVATE_SIZE, KEY_DEACTIVATE_SIZE, KEY_VERBOSE
 from volcorner.rect import Size
-from volcorner.screen.x11.randr import RandRScreen
-from volcorner.tracking.corner import Corner
-from volcorner.tracking.x11.xinput2 import XInput2MouseTracker
+from volcorner.x11.randrscreen import RandRScreen
+from volcorner.corner import Corner
+from volcorner.x11.xinput2tracker import XInput2MouseTracker
 
 # Amount to step the volume per scroll event
 VOL_STEP = 0.05
 
-_log = logging.getLogger("fvol")
+_log = logging.getLogger("volcorner")
 
 
-class FVol:
+class Volcorner:
     def __init__(self, config, config_path):
         """
         Initialize the app.
@@ -92,22 +91,23 @@ class FVol:
         self.mixer.volume = value
 
     def on_change_resolution(self, screen_size):
+        """Update the tracking regions for the new resolution."""
         self._update_tracking_regions()
 
     def _process_config(self, config):
         """Initialize instance variables from the config."""
         cvars = vars(config)
 
-        corner_id = cvars[CORNER]
+        corner_id = cvars[KEY_CORNER]
         self._corner = Corner.from_id(corner_id)
 
-        activate_dim = cvars[ACTIVATE_SIZE]
+        activate_dim = cvars[KEY_ACTIVATE_SIZE]
         self._activate_size = Size(activate_dim, activate_dim)
 
-        deactivate_dim = cvars[DEACTIVATE_SIZE]
+        deactivate_dim = cvars[KEY_DEACTIVATE_SIZE]
         self._deactivate_size = Size(deactivate_dim, deactivate_dim)
 
-        verbosity = cvars[VERBOSE]
+        verbosity = cvars[KEY_VERBOSE]
         log_level = log_level_for_verbosity(verbosity)
         logging.basicConfig(level=log_level)
         _log.info("Set log level %s", logging.getLevelName(log_level))
@@ -135,8 +135,8 @@ def main():
     """Main function."""
     # Load configuration.
     config, config_path = get_config()
-    fvol = FVol(config, config_path)
-    fvol.run()
+    volcorner = Volcorner(config, config_path)
+    volcorner.run()
 
 if __name__ == '__main__':
     main()

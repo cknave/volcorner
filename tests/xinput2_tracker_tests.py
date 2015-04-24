@@ -4,7 +4,7 @@ import subprocess
 
 from volcorner.rect import Rect
 from volcorner import signals
-from volcorner.tracking.x11.xinput2 import XInput2MouseTracker
+from volcorner.x11.xinput2tracker import XInput2MouseTracker
 from .util import SignalReceiver, with_xte, with_xvfb
 
 TEST_AREA = Rect.make(64, 64, 1, 1)

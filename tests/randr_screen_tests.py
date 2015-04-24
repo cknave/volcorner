@@ -9,7 +9,7 @@ https://bugzilla.novell.com/show_bug.cgi?id=823410
 import subprocess
 
 from volcorner.rect import Size
-from volcorner.screen.x11.randr import RandRScreen
+from volcorner.x11.randrscreen import RandRScreen
 from .util import SignalReceiver, with_xvfb
 
 

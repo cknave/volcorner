@@ -7,11 +7,10 @@ import logging
 import xcffib
 from xcffib.xproto import ButtonPressEvent, EventMask, GeGenericEvent, GrabMode, ModMask
 import xcffib.xinput
-
 from volcorner.rect import Point
 import volcorner.logging
-from volcorner.threading.pollthread import PollThread, run_on_thread
-from volcorner.tracking.tracker import MouseTracker
+from volcorner.pollthread import PollThread, run_on_thread
+from volcorner.tracker import MouseTracker
 
 
 _log = logging.getLogger("tracking")
@@ -104,7 +103,8 @@ class XInput2MouseTracker(MouseTracker):
     def _ungrab_button(self, button):
         """Ungrab all events for this button."""
         _log.debug("Ungrabbing button %s", button)
-        self._conn.core.UngrabButton(button, self._root, 0)
+        modifiers = ModMask.Any
+        self._conn.core.UngrabButton(button, self._root, modifiers)
 
     def _tracker_loop(self):
         """Thread main loop."""

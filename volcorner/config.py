@@ -8,6 +8,10 @@ __all__ = [
     'FILENAME',
     'SECTION_DEFAULTS',
     'DEFAULTS',
+    'KEY_ACTIVATE_SIZE',
+    'KEY_DEACTIVATE_SIZE',
+    'KEY_CORNER',
+    'KEY_VERBOSE',
 
     # Functions
     'get_config',
@@ -21,14 +25,13 @@ __all__ = [
 from argparse import ArgumentParser, Namespace
 import configparser
 import logging
-import os.path
 import sys
 
+import os.path
 from appdirs import AppDirs
-
 import volcorner.logging
-from volcorner.tracking.corner import Corner
-from . import keys
+from volcorner.corner import Corner
+
 
 
 # Config file constants
@@ -40,12 +43,18 @@ FILENAME = 'volcorner.conf'
 # Config file sections
 SECTION_DEFAULTS = 'Defaults'
 
+# Config file keys
+KEY_ACTIVATE_SIZE = "activate_size"
+KEY_DEACTIVATE_SIZE = "deactivate_size"
+KEY_CORNER = "corner"
+KEY_VERBOSE = "verbose"
+
 # Default configuration (non-platform specific)
 DEFAULTS = {
-    keys.CORNER: 'top-left',
-    keys.ACTIVATE_SIZE: 1,
-    keys.DEACTIVATE_SIZE: 100,
-    keys.VERBOSE: 0,
+    KEY_CORNER: 'top-left',
+    KEY_ACTIVATE_SIZE: 1,
+    KEY_DEACTIVATE_SIZE: 100,
+    KEY_VERBOSE: 0,
 }
 
 _log = logging.getLogger("config")
@@ -79,13 +88,13 @@ def get_config(argv=sys.argv[1:], app_dirs=APP_DIRS, defaults=DEFAULTS):
     # Parse the rest of the command line arguments with the config file as defaults.
     parser = ArgumentParser(parents=[config_parser])
     parser.set_defaults(**defaults)
-    parser.add_argument('-a', flag(keys.ACTIVATE_SIZE), type=int, metavar='N',
+    parser.add_argument('-a', flag(KEY_ACTIVATE_SIZE), type=int, metavar='N',
                         help="hot corner activation size, in pixels")
-    parser.add_argument('-d', flag(keys.DEACTIVATE_SIZE), type=int, metavar='N',
+    parser.add_argument('-d', flag(KEY_DEACTIVATE_SIZE), type=int, metavar='N',
                         help="hot corner deactivation size, in pixels")
-    parser.add_argument('-x', flag(keys.CORNER), choices=[c.id for c in Corner],
+    parser.add_argument('-x', flag(KEY_CORNER), choices=[c.id for c in Corner],
                         help="corner to use")
-    parser.add_argument('-v', dest=keys.VERBOSE, action='count',
+    parser.add_argument('-v', dest=KEY_VERBOSE, action='count',
                         help="increase verbosity (up to -vvv)")
     parser.add_argument('-s', '--save', action='store_true',
                         help="save this configuration as the new default")
@@ -172,7 +181,7 @@ def write_config(config, path):
     """
     # Build a dict of the configuration keys and their values
     cvars = vars(config)
-    names = (getattr(keys, x) for x in keys.__all__)
+    names = (getattr(keys, x) for x in KEY___all__)
     defaults = {k: cvars[k] for k in names}
 
     writer = configparser.ConfigParser()

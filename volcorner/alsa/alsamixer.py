@@ -4,11 +4,12 @@ __all__ = ['ALSAMixer']
 
 import logging
 import math
-import os
 import threading
 
-from volcorner.audio.mixer import Mixer
+import os
+from volcorner.mixer import Mixer
 from . import mixercffi
+
 
 _log = logging.getLogger("audio")
 
