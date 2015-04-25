@@ -4,11 +4,12 @@ __all__ = ['ALSAMixer']
 
 import logging
 import math
-import os
 import threading
 
-from volcorner.audio.mixer import Mixer
+import os
+from volcorner.mixer import Mixer
 from . import mixercffi
+
 
 _log = logging.getLogger("audio")
 
@@ -118,7 +119,6 @@ class ALSAMixer(Mixer):
             volume = int(value * (max - min) + min)
             _log.debug("Setting %d hw volume", volume)
             self._control.set_raw_volume(volume)
-
 
     def _watch_volume(self, breakfd):
         """

@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-import volcorner.audio.alsa.mixercffi
+import volcorner.alsa.mixercffi
 
 requires = [
     'appdirs',
@@ -14,7 +14,7 @@ tests_require = [
 ]
 
 setup(name='volcorner',
-      version='0.1.3',
+      version='0.2.0',
       description='Volume hot corner utility',
       author='kvance',
       author_email='kvance@kvance.com',
@@ -33,7 +33,7 @@ setup(name='volcorner',
       # CFFI is not zip safe
       zip_safe=False,
       ext_modules=[
-          volcorner.audio.alsa.mixercffi.ffi.verifier.get_extension()
+          volcorner.alsa.mixercffi.ffi.verifier.get_extension()
       ],
       entry_points={
           'console_scripts': [

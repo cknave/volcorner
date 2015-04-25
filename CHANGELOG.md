@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.0] - 2015-04-25
+### Added
+- Qt UI overlay
+### Changed
+- Somewhat flatten module hierarchy
+
 ## [0.1.3] - 2015-04-12
 ### Fixed
 - Fix ungrabbing mouse wheel with any modifier
@@ -25,3 +31,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 [0.1.1]: https://github.com/cknave/volcorner/compare/volcorner-0.1.0...volcorner-0.1.1
 [0.1.2]: https://github.com/cknave/volcorner/compare/volcorner-0.1.1...volcorner-0.1.2
 [0.1.3]: https://github.com/cknave/volcorner/compare/volcorner-0.1.2...volcorner-0.1.3
+[0.2.0]: https://github.com/cknave/volcorner/compare/volcorner-0.1.3...volcorner-0.2.0
