@@ -11,6 +11,7 @@ from PyQt4 import QtGui
 
 import volcorner
 from volcorner.corner import Corner
+from volcorner.rect import Rect
 from volcorner.ui import UI
 
 _log = logging.getLogger("qtgui")
@@ -57,6 +58,7 @@ class QtUI(UI):
     def overlay_rect(self, overlay_rect):
         UI.overlay_rect.__set__(self, overlay_rect)
         self.app.overlay_rect = overlay_rect
+        self.app.update_rect.emit(overlay_rect)
 
     @property
     def volume(self):
@@ -75,6 +77,7 @@ class OverlayApplication(QtGui.QApplication):
     stop = QtCore.pyqtSignal()
     update_transform = QtCore.pyqtSignal(Corner)
     update_volume = QtCore.pyqtSignal(float)
+    update_rect = QtCore.pyqtSignal(Rect)
 
     def __init__(self, args=None):
         super().__init__(args or [])
@@ -93,6 +96,7 @@ class OverlayApplication(QtGui.QApplication):
         self.stop.connect(self.on_stop, Qt.QueuedConnection)
         self.update_transform.connect(self.on_update_transform, Qt.QueuedConnection)
         self.update_volume.connect(self.on_update_volume, Qt.QueuedConnection)
+        self.update_rect.connect(self.on_update_rect, Qt.QueuedConnection)
 
         # TODO: can Qt do 1-bit alpha channel?
         if not QtGui.QX11Info.isCompositingManagerRunning():
@@ -160,17 +164,21 @@ class OverlayApplication(QtGui.QApplication):
             relative_value = (volume - i * step) / step
             segment.value = clamp(0.0, relative_value, 1.0)
 
+    def on_update_rect(self, rect):
+        if self.window is not None:
+            self.window.move(rect.x1, rect.y1)
+            self.window.setFixedSize(rect.width, rect.height)
+
     def _create_window(self, scene):
         window = QtGui.QGraphicsView(scene)
         window.setStyleSheet("background-color: transparent;")
-        window.setFixedSize(self.overlay_rect.width, self.overlay_rect.height)
         window.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         window.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         window.setWindowTitle("volcorner")
         window.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         window.setAttribute(Qt.WA_TranslucentBackground)
         window.setFrameStyle(QtGui.QFrame.NoFrame)
-        window.move(self.overlay_rect.x1, self.overlay_rect.y1)
+        self.on_update_rect(self.overlay_rect)
         self.on_update_transform(self.corner)
         return window
 

@@ -69,15 +69,14 @@ class Volcorner:
         _log.debug("Loading UI")
         self.ui = QtUI()
         self.ui.corner = self._corner
-        self.ui.overlay_rect = self._corner.rect(self.screen.size, OVERLAY_SIZE)
+        self._update_ui_rect()
         self.ui.load()
         _log.info("UI loaded")
 
         _log.info("Initialization complete; running main loop")
-        # TODO: run UI main loop
         try:
-            # Qt never lets the python signal handler run, so we have to use SIG_DFL instead
-            # of allowing the app to shut down cleanly.
+            # TODO: Qt never lets the python signal handler run, so we have to use SIG_DFL
+            # instead of allowing the app to shut down cleanly.
             #
             # Example of doing something crazy with sockets to get around this:
             # https://github.com/sijk/qt-unix-signals
@@ -123,7 +122,7 @@ class Volcorner:
     def on_change_resolution(self, screen_size):
         """Update the tracking regions for the new resolution."""
         self._update_tracking_regions()
-        # TODO: fix the UI position
+        self._update_ui_rect()
 
     def _process_config(self, config):
         """Initialize instance variables from the config."""
@@ -160,6 +159,13 @@ class Volcorner:
         else:
             self.tracker.region = self._deactivate_region
         _log.debug("Now tracking region %r", self.tracker.region)
+
+    def _update_ui_rect(self):
+        """Update the display geometry for the UI overlay."""
+        assert (self.screen is not None) and (self.screen.size is not None)
+        assert self.ui is not None
+        self.ui.overlay_rect = self._corner.rect(self.screen.size, OVERLAY_SIZE)
+        _log.debug("New overlay rect %r", self.ui.overlay_rect)
 
 
 def main():
