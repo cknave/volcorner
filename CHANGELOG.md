@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased][unreleased]
 ### Added
+- Qt UI overlay
+
 ### Changed
 - Somewhat flatten module hierarchy
 
