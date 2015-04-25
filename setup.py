@@ -6,7 +6,6 @@ requires = [
     'appdirs',
     'cffi',
     'smokesignal',
-    'PyQt4',
     'xcffib',
 ]
 
