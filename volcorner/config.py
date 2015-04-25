@@ -33,7 +33,6 @@ import volcorner.logging
 from volcorner.corner import Corner
 
 
-
 # Config file constants
 APP_NAME = 'volcorner'
 APP_AUTHOR = 'kvance.com'
@@ -48,6 +47,7 @@ KEY_ACTIVATE_SIZE = "activate_size"
 KEY_DEACTIVATE_SIZE = "deactivate_size"
 KEY_CORNER = "corner"
 KEY_VERBOSE = "verbose"
+ALL_KEYS = (KEY_ACTIVATE_SIZE, KEY_DEACTIVATE_SIZE, KEY_CORNER, KEY_VERBOSE)
 
 # Default configuration (non-platform specific)
 DEFAULTS = {
@@ -181,8 +181,7 @@ def write_config(config, path):
     """
     # Build a dict of the configuration keys and their values
     cvars = vars(config)
-    names = (getattr(keys, x) for x in KEY___all__)
-    defaults = {k: cvars[k] for k in names}
+    defaults = {k: cvars[k] for k in ALL_KEYS}
 
     writer = configparser.ConfigParser()
     writer[SECTION_DEFAULTS] = defaults

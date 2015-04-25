@@ -120,7 +120,6 @@ class ALSAMixer(Mixer):
             _log.debug("Setting %d hw volume", volume)
             self._control.set_raw_volume(volume)
 
-
     def _watch_volume(self, breakfd):
         """
         Watch for changes in volume until a file descriptor is written to.

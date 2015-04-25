@@ -76,8 +76,8 @@ class OverlayApplication(QtGui.QApplication):
     update_transform = QtCore.pyqtSignal(Corner)
     update_volume = QtCore.pyqtSignal(float)
 
-    def __init__(self, args=[]):
-        super().__init__(args)
+    def __init__(self, args=None):
+        super().__init__(args or [])
         self.background = None
         self.dot = None
         self.segments = None

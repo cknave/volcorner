@@ -69,7 +69,7 @@ def find_bbox(*filenames):
         min_y = min(min_y, bbox[1])
         max_x = max(max_x, bbox[2])
         max_y = max(max_y, bbox[3])
-    return (min_x, min_y, max_x, max_y)
+    return min_x, min_y, max_x, max_y
 
 
 if __name__ == '__main__':
