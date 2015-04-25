@@ -19,6 +19,7 @@ setup(name='volcorner',
       author='kvance',
       author_email='kvance@kvance.com',
       license='GNU General Public License v3 or later (GPLv3+)',
+      url='https://github.com/cknave/volcorner',
       classifiers=[
           'Development Status :: 3 - Alpha',
           'Environment :: X11 Applications',
@@ -30,6 +31,7 @@ setup(name='volcorner',
       ],
       keywords='volume hot corner hotcorner',
       packages=find_packages(),
+      package_data={'volcorner': ['images/*']},
       # CFFI is not zip safe
       zip_safe=False,
       ext_modules=[
