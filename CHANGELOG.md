@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.2.0] - 2015-04-25
 ### Added
 - Qt UI overlay
+
 ### Changed
 - Somewhat flatten module hierarchy
 
@@ -15,6 +16,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.1.2] - 2015-04-12
 ### Added
 - Volume setting is now logged
+
 ### Fixed
 - Mouse wheel is grabbed regardless of any X modifier flags
 
