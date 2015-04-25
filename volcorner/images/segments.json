@@ -1,0 +1,48 @@
+{
+  "segments": [
+    {
+      "bbox": [
+        11,
+        11,
+        59,
+        59
+      ],
+      "empty": "segment_empty1.png",
+      "travel": 19,
+      "full": "segment_full1.png"
+    },
+    {
+      "bbox": [
+        16,
+        16,
+        94,
+        94
+      ],
+      "empty": "segment_empty2.png",
+      "travel": 20,
+      "full": "segment_full2.png"
+    },
+    {
+      "bbox": [
+        21,
+        20,
+        129,
+        129
+      ],
+      "empty": "segment_empty3.png",
+      "travel": 20,
+      "full": "segment_full3.png"
+    },
+    {
+      "bbox": [
+        25,
+        25,
+        163,
+        163
+      ],
+      "empty": "segment_empty4.png",
+      "travel": 21,
+      "full": "segment_full4.png"
+    }
+  ]
+}

@@ -2,19 +2,24 @@
 """volcorner volume changer."""
 
 import logging
+import signal
 
 import smokesignal
 from volcorner import signals
 from volcorner.alsa.alsamixer import ALSAMixer
 from volcorner.config import get_config, log_level_for_verbosity, write_config
 from volcorner.config import KEY_CORNER, KEY_ACTIVATE_SIZE, KEY_DEACTIVATE_SIZE, KEY_VERBOSE
+from volcorner.corner import Corner
+from volcorner.qt.qtui import QtUI
 from volcorner.rect import Size
 from volcorner.x11.randrscreen import RandRScreen
-from volcorner.corner import Corner
 from volcorner.x11.xinput2tracker import XInput2MouseTracker
 
 # Amount to step the volume per scroll event
 VOL_STEP = 0.05
+
+# UI overlay size
+OVERLAY_SIZE = Size(200, 200)
 
 _log = logging.getLogger("volcorner")
 
@@ -36,6 +41,7 @@ class Volcorner:
         self.tracker = None
         self._in_corner = False
         self.mixer = None
+        self.ui = None
 
         smokesignal.on(signals.ENTER_REGION, self.on_enter)
         smokesignal.on(signals.LEAVE_REGION, self.on_leave)
@@ -44,55 +50,80 @@ class Volcorner:
         smokesignal.on(signals.CHANGE_RESOLUTION, self.on_change_resolution)
 
     def run(self):
+        _log.debug("Opening mixer")
         self.mixer = ALSAMixer()
         self.mixer.open()
-        _log.info("Mixer initialized")
+        _log.info("Mixer ready")
 
+        _log.debug("Opening screen")
         self.screen = RandRScreen()
         self.screen.open()
-        _log.info("Screen initialized")
+        _log.info("Screen ready")
 
+        _log.debug("Opening mouse tracker")
         self.tracker = XInput2MouseTracker()
         self._update_tracking_regions()
         self.tracker.start()
-        _log.info("Tracker initialized")
+        _log.info("Mouse tracker running")
+
+        _log.debug("Loading UI")
+        self.ui = QtUI()
+        self.ui.corner = self._corner
+        self.ui.overlay_rect = self._corner.rect(self.screen.size, OVERLAY_SIZE)
+        self.ui.load()
+        _log.info("UI loaded")
 
         _log.info("Initialization complete; running main loop")
         # TODO: run UI main loop
         try:
-            import time
-            time.sleep(999999999999)
+            # Qt never lets the python signal handler run, so we have to use SIG_DFL instead
+            # of allowing the app to shut down cleanly.
+            #
+            # Example of doing something crazy with sockets to get around this:
+            # https://github.com/sijk/qt-unix-signals
+            signal.signal(signal.SIGINT, signal.SIG_DFL)
+            self.ui.run_main_loop()
         finally:
             _log.info("Shutting down")
             self.tracker.stop()
             self.screen.close()
             self.mixer.close()
 
+    def on_interrupt(self):
+        """End the program."""
+        _log.info("Received interrupt, gracefully shutting down.")
+        self.ui.stop()
+
     def on_enter(self):
         """Expand the hotspot to the scroll capture region, and begin capturing scroll events."""
         self.tracker.region = self._deactivate_region
         self.tracker.grab_scroll()
+        self.ui.show()
 
     def on_leave(self):
         """Reduce the hotspot to the corner, and stop capturing scroll events."""
         self.tracker.region = self._activate_region
         self.tracker.ungrab_scroll()
+        self.ui.hide()
 
     def on_scroll_up(self):
         """Increment the volume."""
         value = min(1.0, self.mixer.volume + VOL_STEP)
         _log.info("Increasing volume to %.02f", value)
         self.mixer.volume = value
+        self.ui.volume = value
 
     def on_scroll_down(self):
         """Decrement the volume."""
         value = max(0.0, self.mixer.volume - VOL_STEP)
         _log.info("Decreasing volume to %.02f", value)
         self.mixer.volume = value
+        self.ui.volume = value
 
     def on_change_resolution(self, screen_size):
         """Update the tracking regions for the new resolution."""
         self._update_tracking_regions()
+        # TODO: fix the UI position
 
     def _process_config(self, config):
         """Initialize instance variables from the config."""
