@@ -3,6 +3,8 @@ Volcorner
 
 A volume hot-corner utility, currently in alpha.
 
+![Screenshot](https://cloud.githubusercontent.com/assets/4196901/7334538/81ac5988-eb64-11e4-8db5-6a6065959d61.png)
+
 System requirements
 -------------------
 
