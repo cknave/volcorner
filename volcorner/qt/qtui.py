@@ -1,5 +1,6 @@
 """Qt user interface."""
 
+from collections import namedtuple
 import json
 import logging
 import os.path
@@ -15,6 +16,9 @@ from volcorner.rect import Rect
 from volcorner.ui import UI
 
 _log = logging.getLogger("qtgui")
+
+# Animation duration in ms
+DURATION = 200
 
 
 class QtUI(UI):
@@ -84,8 +88,8 @@ class OverlayApplication(QtGui.QApplication):
         self.background = None
         self.dot = None
         self.segments = None
-        self.show_animation = None
-        self.hide_animation = None
+        self.current_animation = None
+        self.next_animation = None
         self.overlay_rect = None
         self.corner = None
         self.window = None
@@ -123,21 +127,27 @@ class OverlayApplication(QtGui.QApplication):
         # Create a window for the scene
         self.window = self._create_window(scene)
 
+    def queue_animation(self, anim_func):
+        if self.current_animation is None:
+            _log.debug('Starting animation {}'.format(anim_func.__name__))
+            self.current_animation = anim_func()
+            self.current_animation.timeline.finished.connect(self.on_animation_finished)
+        else:
+            _log.debug('Queueing animation {}'.format(anim_func.__name__))
+            self.next_animation = anim_func
+
+    def on_animation_finished(self):
+        _log.debug('Animation finished')
+        self.current_animation = None
+        if self.next_animation:
+            self.queue_animation(self.next_animation)
+            self.next_animation = None
+
     def on_show(self):
-        # TODO: handle if already hiding
-        self.window.show()
-        self.show_animation = self._animate(scale_in=0.0, scale_out=1.0,
-                                            rotation_in=-90.0, rotation_out=0.0,
-                                            easing=QtCore.QEasingCurve.OutQuad)
-        # TODO: clear out show animation when done
+        self.queue_animation(self._animate_show)
 
     def on_hide(self):
-        # TODO: handle if already showing
-        self.hide_animation = self._animate(scale_in=1.0, scale_out=0.0,
-                                            rotation_in=0.0, rotation_out=90.0,
-                                            easing=QtCore.QEasingCurve.InQuad)
-        # TODO: clear out hide animation when done
-        # TODO: hide window when done
+        self.queue_animation(self._animate_hide)
 
     def on_stop(self):
         self.quit()
@@ -182,8 +192,8 @@ class OverlayApplication(QtGui.QApplication):
         self.on_update_transform(self.corner)
         return window
 
-    def _animate(self, scale_in, scale_out, rotation_in, rotation_out, easing, duration=300,
-                 interval=16, segment_step=0.2):
+    def _animate(self, scale_in, scale_out, rotation_in, rotation_out, easing, completion=None,
+                 duration=DURATION, interval=16, segment_step=0.2):
         animations = []
 
         timeline = QtCore.QTimeLine(duration)
@@ -207,7 +217,17 @@ class OverlayApplication(QtGui.QApplication):
             animations.append(rotate)
 
         timeline.start()
-        return animations
+        return Animation(timeline, animations, completion)
+
+    def _animate_show(self):
+        self.window.show()
+        return self._animate(scale_in=0.0, scale_out=1.0, rotation_in=-90.0, rotation_out=0.0,
+                             easing=QtCore.QEasingCurve.OutQuad)
+
+    def _animate_hide(self):
+        return self._animate(scale_in=1.0, scale_out=0.0, rotation_in=0.0, rotation_out=90.0,
+                             easing=QtCore.QEasingCurve.InQuad,
+                             completion=lambda: self.window.hide())
 
 
 class SegmentItem(QtGui.QGraphicsItem):
@@ -294,6 +314,9 @@ class SegmentItem(QtGui.QGraphicsItem):
         image = QtGui.QImage(path_to(filename))
         cropped = image.copy(bbox)
         return QtGui.QPixmap.fromImage(cropped)
+
+
+Animation = namedtuple('Animation', ['timeline', 'animations', 'completion'])
 
 
 def path_to(filename):
