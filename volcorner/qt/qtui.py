@@ -128,9 +128,6 @@ class OverlayApplication(QtGui.QApplication):
         # Create a window for the scene
         self.window = self._create_window(scene)
 
-        # Qt doesn't support showing on all desktops, so fall back to x11.
-        display = QtGui.QX11Info.display()
-
     def queue_animation(self, anim_func):
         if self.current_animation is None:
             _log.debug('Starting animation {}'.format(anim_func.__name__))
