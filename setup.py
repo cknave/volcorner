@@ -35,6 +35,8 @@ setup(name='volcorner',
       # CFFI is not zip safe
       zip_safe=False,
       ext_modules=[
+          # TODO: only include xlibprops if using Qt
+          volcorner.x11.xlibprops.ffi.verifier.get_extension(),
           volcorner.alsa.mixercffi.ffi.verifier.get_extension()
       ],
       entry_points={

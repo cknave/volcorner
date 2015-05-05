@@ -14,6 +14,7 @@ import volcorner
 from volcorner.corner import Corner
 from volcorner.rect import Rect
 from volcorner.ui import UI
+from volcorner.x11 import xlibprops
 
 _log = logging.getLogger("qtgui")
 
@@ -127,6 +128,9 @@ class OverlayApplication(QtGui.QApplication):
         # Create a window for the scene
         self.window = self._create_window(scene)
 
+        # Qt doesn't support showing on all desktops, so fall back to x11.
+        display = QtGui.QX11Info.display()
+
     def queue_animation(self, anim_func):
         if self.current_animation is None:
             _log.debug('Starting animation {}'.format(anim_func.__name__))
@@ -221,6 +225,10 @@ class OverlayApplication(QtGui.QApplication):
 
     def _animate_show(self):
         self.window.show()
+        # Show on all desktops
+        display = QtGui.QX11Info.display()
+        window_id = self.window.winId()
+        xlibprops.move_to_desktop(display, window_id, xlibprops.ALL_DESKTOPS)
         return self._animate(scale_in=0.0, scale_out=1.0, rotation_in=-90.0, rotation_out=0.0,
                              easing=QtCore.QEasingCurve.OutQuad)
 
