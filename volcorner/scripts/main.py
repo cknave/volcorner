@@ -69,6 +69,7 @@ class Volcorner:
         _log.debug("Loading UI")
         self.ui = QtUI()
         self.ui.corner = self._corner
+        self.ui.volume = self.mixer.volume
         self._update_ui_rect()
         self.ui.load()
         _log.info("UI loaded")
