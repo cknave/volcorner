@@ -2,15 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased][unreleased]
-### Added
-### Changed
-### Deprecated
-### Removed
+## [0.2.1] - 2015-05-06
 ### Fixed
 - UI overlay displays on all desktops
-
-### Security
+- Overlay no longer eats mouse/keyboard input
+- Initial volume is now set
 
 ## [0.2.0] - 2015-04-25
 ### Added
@@ -39,8 +35,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[unreleased]: https://github.com/cknave/volcorner/compare/volcorner-0.1.1...HEAD
+[unreleased]: https://github.com/cknave/volcorner/compare/volcorner-0.2.1...HEAD
 [0.1.1]: https://github.com/cknave/volcorner/compare/volcorner-0.1.0...volcorner-0.1.1
 [0.1.2]: https://github.com/cknave/volcorner/compare/volcorner-0.1.1...volcorner-0.1.2
 [0.1.3]: https://github.com/cknave/volcorner/compare/volcorner-0.1.2...volcorner-0.1.3
 [0.2.0]: https://github.com/cknave/volcorner/compare/volcorner-0.1.3...volcorner-0.2.0
+[0.2.1]: https://github.com/cknave/volcorner/compare/volcorner-0.2.0...volcorner-0.2.1
