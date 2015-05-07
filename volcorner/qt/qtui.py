@@ -14,7 +14,7 @@ import volcorner
 from volcorner.corner import Corner
 from volcorner.rect import Rect
 from volcorner.ui import UI
-from volcorner.x11 import xlibprops
+from volcorner.x11 import xlib
 
 _log = logging.getLogger("qtgui")
 
@@ -94,6 +94,7 @@ class OverlayApplication(QtGui.QApplication):
         self.overlay_rect = None
         self.corner = None
         self.window = None
+        self._has_set_advanced_window_state = False
 
         # Use a queued connection since these can be called from another thread
         self.show_overlay.connect(self.on_show, Qt.QueuedConnection)
@@ -222,10 +223,7 @@ class OverlayApplication(QtGui.QApplication):
 
     def _animate_show(self):
         self.window.show()
-        # Show on all desktops
-        display = QtGui.QX11Info.display()
-        window_id = self.window.winId()
-        xlibprops.move_to_desktop(display, window_id, xlibprops.ALL_DESKTOPS)
+        self._set_advanced_window_state()
         return self._animate(scale_in=0.0, scale_out=1.0, rotation_in=-90.0, rotation_out=0.0,
                              easing=QtCore.QEasingCurve.OutQuad)
 
@@ -233,6 +231,17 @@ class OverlayApplication(QtGui.QApplication):
         return self._animate(scale_in=1.0, scale_out=0.0, rotation_in=0.0, rotation_out=90.0,
                              easing=QtCore.QEasingCurve.InQuad,
                              completion=lambda: self.window.hide())
+
+    def _set_advanced_window_state(self):
+        # Only need to set this state once.
+        if not self._has_set_advanced_window_state:
+            self._has_set_advanced_window_state = True
+
+            display = QtGui.QX11Info.display()
+            window_id = self.window.winId()
+
+            xlib.move_to_desktop(display, window_id, xlib.ALL_DESKTOPS)
+            xlib.set_empty_window_shape(display, window_id)
 
 
 class SegmentItem(QtGui.QGraphicsItem):

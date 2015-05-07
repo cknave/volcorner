@@ -1,6 +1,6 @@
 """Set window properties with Xlib (from Qt)."""
 
-__all__ = ['ALL_DESKTOPS', 'move_to_desktop']
+__all__ = ['ALL_DESKTOPS', 'move_to_desktop', 'set_empty_window_shape']
 
 from cffi import FFI
 import sip
@@ -15,6 +15,7 @@ typedef unsigned long VisualID;
 typedef int Status;
 typedef XID GContext;
 typedef XID Colormap;
+typedef XID XserverRegion;
 
 typedef ... XExtData;
 typedef ... _XPrivate;
@@ -132,11 +133,17 @@ typedef union _XEvent {
         long pad[24];
 } XEvent;
 
+typedef struct {
+    short x, y;
+    unsigned short width, height;
+} XRectangle;
+
 extern Atom XInternAtom(
     Display*            /* display */,
     const char*         /* atom_name */,
     Bool                /* only_if_exists */
 );
+
 extern Status XSendEvent(
     Display*            /* display */,
     Window              /* w */,
@@ -144,6 +151,16 @@ extern Status XSendEvent(
     long                /* event_mask */,
     XEvent*             /* event_send */
 );
+
+XserverRegion
+XFixesCreateRegion (Display *dpy, XRectangle *rectangles, int nrectangles);
+
+void
+XFixesSetWindowShapeRegion (Display *dpy, Window win, int shape_kind,
+                            int x_off, int y_off, XserverRegion region);
+
+void
+XFixesDestroyRegion (Display *dpy, XserverRegion region);
 """
 
 # Since there are no Xlib functions to access the root window of a display (only macros),
@@ -151,18 +168,21 @@ extern Status XSendEvent(
 VERIFY = """
 #define XLIB_ILLEGAL_ACCESS
 #include <X11/Xlib.h>
+#include <X11/extensions/shape.h>
+#include <X11/extensions/Xfixes.h>
 """
 
 # Other Xlib constants
 ClientMessage = 33
 SubstructureRedirectMask = (1 << 20)
 SubstructureNotifyMask = (1 << 19)
+ShapeInput = 2
 ALL_DESKTOPS = -1
 
 # Set up C bindings
 ffi = FFI()
 ffi.cdef(CDEF)
-C = ffi.verify(VERIFY, libraries=["X11"])
+C = ffi.verify(VERIFY, libraries=["X11", "Xfixes"])
 
 
 def move_to_desktop(display, window_id, desktop):
@@ -177,15 +197,18 @@ def move_to_desktop(display, window_id, desktop):
 
     event = ffi.new("XEvent *")
     event.xclient.type = ClientMessage
-    event.xclient.serial = 0
     event.xclient.send_event = True
     event.xclient.message_type = C.XInternAtom(display_ptr, b"_NET_WM_DESKTOP", False)
     event.xclient.window = window_id
     event.xclient.format = 32
     event.xclient.data.l[0] = desktop
-    event.xclient.data.l[1] = 0
-    event.xclient.data.l[2] = 0
-    event.xclient.data.l[3] = 0
-    event.xclient.data.l[4] = 0
 
     C.XSendEvent(display_ptr, root, False, mask, event)
+
+
+def set_empty_window_shape(display, window_id):
+    display_ptr = ffi.cast("Display *", sip.unwrapinstance(display))
+    empty = ffi.new("XRectangle *")
+    region = C.XFixesCreateRegion(display_ptr, empty, 1)
+    C.XFixesSetWindowShapeRegion(display_ptr, window_id, ShapeInput, 0, 0, region)
+    C.XFixesDestroyRegion(display_ptr, region)

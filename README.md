@@ -8,7 +8,7 @@ A volume hot-corner utility, currently in alpha.
 System requirements
 -------------------
 
-* X11 with XInput2 and RANDR extensions
+* X11 with XInput2, RANDR, Shape, and XFixes extensions
 * ALSA
 * Python 3.4 with [CFFI](http://cffi.readthedocs.org/en/latest/)
 * [PyQt4](http://www.riverbankcomputing.com/software/pyqt/download)
