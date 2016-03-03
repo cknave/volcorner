@@ -48,6 +48,7 @@ class Volcorner:
         smokesignal.on(signals.SCROLL_UP, self.on_scroll_up)
         smokesignal.on(signals.SCROLL_DOWN, self.on_scroll_down)
         smokesignal.on(signals.CHANGE_RESOLUTION, self.on_change_resolution)
+        smokesignal.on(signals.CHANGE_VOLUME, self.on_change_volume)
 
     def run(self):
         _log.debug("Opening mixer")
@@ -111,19 +112,21 @@ class Volcorner:
         value = min(1.0, self.mixer.volume + VOL_STEP)
         _log.info("Increasing volume to %.02f", value)
         self.mixer.volume = value
-        self.ui.volume = value
 
     def on_scroll_down(self):
         """Decrement the volume."""
         value = max(0.0, self.mixer.volume - VOL_STEP)
         _log.info("Decreasing volume to %.02f", value)
         self.mixer.volume = value
-        self.ui.volume = value
 
     def on_change_resolution(self, screen_size):
         """Update the tracking regions for the new resolution."""
         self._update_tracking_regions()
         self._update_ui_rect()
+
+    def on_change_volume(self, volume):
+        """Update the UI when the volume is changed, by this or another program."""
+        self.ui.volume = volume
 
     def _process_config(self, config):
         """Initialize instance variables from the config."""
