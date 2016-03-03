@@ -2,13 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased][unreleased]
-### Added
-### Changed
-### Deprecated
-### Removed
+## [0.2.2] - 2016-03-02
 ### Fixed
-### Security
+- Blacklist xcffib 0.4, which temporarily broke compatibility
+- Receive volume updates when other programs change it
 
 ## [0.2.1] - 2015-05-06
 ### Fixed
@@ -49,3 +46,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 [0.1.3]: https://github.com/cknave/volcorner/compare/volcorner-0.1.2...volcorner-0.1.3
 [0.2.0]: https://github.com/cknave/volcorner/compare/volcorner-0.1.3...volcorner-0.2.0
 [0.2.1]: https://github.com/cknave/volcorner/compare/volcorner-0.2.0...volcorner-0.2.1
+[0.2.2]: https://github.com/cknave/volcorner/compare/volcorner-0.2.1...volcorner-0.2.2
