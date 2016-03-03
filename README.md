@@ -1,9 +1,9 @@
 Volcorner
 =========
 
-A volume hot-corner utility, currently in alpha.
+A volume hot-corner utility for Linux desktops.
 
-![Screenshot](https://cloud.githubusercontent.com/assets/4196901/7334538/81ac5988-eb64-11e4-8db5-6a6065959d61.png)
+![Screenshot](https://cloud.githubusercontent.com/assets/4196901/13483404/f781e670-e0c1-11e5-981b-c27019006d84.gif)
 
 System requirements
 -------------------
