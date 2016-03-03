@@ -7,7 +7,7 @@ requires = [
     'appdirs',
     'cffi',
     'smokesignal',
-    'xcffib',
+    'xcffib<0.4.0',
 ]
 
 tests_require = [
