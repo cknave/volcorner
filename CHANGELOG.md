@@ -5,9 +5,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased][unreleased]
 ### Added
 ### Changed
+- Allow xcffib 0.4.2 to be used
+
 ### Deprecated
 ### Removed
 ### Fixed
+- UI overlay no longer appears in the task manager or pager
+- Removed unused imports
+
 ### Security
 
 ## [0.2.2] - 2016-03-02
