@@ -2,18 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased][unreleased]
-### Added
+## [0.2.3] - 2016-07-30
 ### Changed
 - Allow xcffib 0.4.2 to be used
 
-### Deprecated
-### Removed
 ### Fixed
 - UI overlay no longer appears in the task manager or pager
 - Removed unused imports
-
-### Security
 
 ## [0.2.2] - 2016-03-02
 ### Fixed
@@ -60,3 +55,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 [0.2.0]: https://github.com/cknave/volcorner/compare/volcorner-0.1.3...volcorner-0.2.0
 [0.2.1]: https://github.com/cknave/volcorner/compare/volcorner-0.2.0...volcorner-0.2.1
 [0.2.2]: https://github.com/cknave/volcorner/compare/volcorner-0.2.1...volcorner-0.2.2
+[0.2.2]: https://github.com/cknave/volcorner/compare/volcorner-0.2.2...volcorner-0.2.3
