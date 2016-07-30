@@ -187,7 +187,7 @@ class OverlayApplication(QtGui.QApplication):
         window.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         window.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         window.setWindowTitle("volcorner")
-        window.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        window.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         window.setAttribute(Qt.WA_TranslucentBackground)
         window.setFrameStyle(QtGui.QFrame.NoFrame)
         self.on_update_rect(self.overlay_rect)
