@@ -22,7 +22,7 @@ __all__ = [
     'write_config',
 ]
 
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 import configparser
 import logging
 import sys

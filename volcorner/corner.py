@@ -2,7 +2,7 @@
 
 from enum import Enum
 
-from volcorner.rect import Rect, Size
+from volcorner.rect import Rect
 
 
 class Corner(Enum):

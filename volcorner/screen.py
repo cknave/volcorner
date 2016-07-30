@@ -3,7 +3,6 @@
 import smokesignal
 
 from abc import ABCMeta, abstractmethod
-from volcorner.rect import Size
 from volcorner import signals
 
 
