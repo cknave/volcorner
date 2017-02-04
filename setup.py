@@ -8,6 +8,7 @@ requires = [
     'cffi',
     'smokesignal',
     'xcffib>0.4.1',
+    'pyqt5',
 ]
 
 tests_require = [
@@ -15,7 +16,7 @@ tests_require = [
 ]
 
 setup(name='volcorner',
-      version='0.2.3',
+      version='0.3.0',
       description='Volume hot corner utility',
       author='kvance',
       author_email='kvance@kvance.com',

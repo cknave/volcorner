@@ -10,6 +10,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 ### Security
 
+## [0.3.0] - 2017-02-04
+### Changed
+- Migrate from PyQt4 to PyQt5
+
+### Removed
+- README.md no longer has instructions to install PyQt through the OS now that
+  it can be installed through pip
+
 ## [0.2.3] - 2016-07-30
 ### Changed
 - Allow xcffib 0.4.2 to be used
@@ -56,7 +64,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[unreleased]: https://github.com/cknave/volcorner/compare/volcorner-0.2.1...HEAD
+[unreleased]: https://github.com/cknave/volcorner/compare/volcorner-0.3.0...HEAD
 [0.1.1]: https://github.com/cknave/volcorner/compare/volcorner-0.1.0...volcorner-0.1.1
 [0.1.2]: https://github.com/cknave/volcorner/compare/volcorner-0.1.1...volcorner-0.1.2
 [0.1.3]: https://github.com/cknave/volcorner/compare/volcorner-0.1.2...volcorner-0.1.3
@@ -64,3 +72,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 [0.2.1]: https://github.com/cknave/volcorner/compare/volcorner-0.2.0...volcorner-0.2.1
 [0.2.2]: https://github.com/cknave/volcorner/compare/volcorner-0.2.1...volcorner-0.2.2
 [0.2.3]: https://github.com/cknave/volcorner/compare/volcorner-0.2.2...volcorner-0.2.3
+[0.3.0]: https://github.com/cknave/volcorner/compare/volcorner-0.2.3...volcorner-0.3.0

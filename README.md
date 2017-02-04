@@ -9,9 +9,9 @@ System requirements
 -------------------
 
 * X11 with XInput2, RANDR, Shape, and XFixes extensions
+* Qt 5
 * ALSA
 * Python 3.4 with [CFFI](http://cffi.readthedocs.org/en/latest/)
-* [PyQt4](http://www.riverbankcomputing.com/software/pyqt/download)
 
 Installation
 ------------
@@ -19,11 +19,6 @@ Installation
 CFFI is required to run the setup script.  Make sure it's installed first:
 
     pip install cffi
-
-PyQt4 is required for the UI overlay.  Install it using your system package manager:
-
-    sudo apt-get install python-qt4   # Ubuntu
-    sudo emerge -av dev-python/PyQt4  # Gentoo
 
 pip can then install volcorner along with the remaining dependencies:
 

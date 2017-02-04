@@ -6,9 +6,11 @@ import logging
 import os.path
 from pkg_resources import resource_filename
 
-from PyQt4 import QtCore
-from PyQt4.QtCore import Qt
-from PyQt4 import QtGui
+from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
+from PyQt5.QtX11Extras import QX11Info
 
 import volcorner
 from volcorner.corner import Corner
@@ -76,7 +78,7 @@ class QtUI(UI):
         self.app.update_volume.emit(volume)
 
 
-class OverlayApplication(QtGui.QApplication):
+class OverlayApplication(QtWidgets.QApplication):
     show_overlay = QtCore.pyqtSignal()
     hide_overlay = QtCore.pyqtSignal()
     stop = QtCore.pyqtSignal()
@@ -87,7 +89,10 @@ class OverlayApplication(QtGui.QApplication):
     def __init__(self, args=None):
         super().__init__(args or [])
         self.background = None
+        self.background_rotation = None
+        self.background_scale = None
         self.dot = None
+        self.dot_rotation = None
         self.segments = None
         self.current_animation = None
         self.next_animation = None
@@ -105,8 +110,10 @@ class OverlayApplication(QtGui.QApplication):
         self.update_rect.connect(self.on_update_rect, Qt.QueuedConnection)
 
         # TODO: can Qt do 1-bit alpha channel?
-        if not QtGui.QX11Info.isCompositingManagerRunning():
-            _log.warn("Compositing window manager NOT detected!  Translucency will be broken.")
+        # Qt5 lost isCompositingManagerRunning() until 5.7
+        if (hasattr(QX11Info, 'isCompositingManagerRunning') and
+                not QX11Info.isCompositingManagerRunning()):
+            _log.warning("Compositing window manager NOT detected!  Translucency will be broken.")
 
     def load(self):
         assert self.overlay_rect is not None
@@ -117,12 +124,17 @@ class OverlayApplication(QtGui.QApplication):
         dot_pixmap = QtGui.QPixmap(path_to('segment_full0.png'))
         with open(path_to('segments.json')) as config_file:
             config_json = json.load(config_file)
-        self.segments = [SegmentItem(config) for config in config_json['segments']]
+        self.segments = [SegmentObject(config) for config in config_json['segments']]
 
         # Place in scene
-        scene = QtGui.QGraphicsScene()
+        scene = QtWidgets.QGraphicsScene()
         self.background = scene.addPixmap(bg_pixmap)
+        self.background_scale = QtWidgets.QGraphicsScale()
+        self.background_rotation = QtWidgets.QGraphicsRotation()
+        self.background.setTransformations([self.background_scale, self.background_rotation])
         self.dot = scene.addPixmap(dot_pixmap)
+        self.dot_rotation = QtWidgets.QGraphicsRotation()
+        self.dot.setTransformations([self.dot_rotation])
         for segment in self.segments:
             scene.addItem(segment)
 
@@ -133,7 +145,7 @@ class OverlayApplication(QtGui.QApplication):
         if self.current_animation is None:
             _log.debug('Starting animation {}'.format(anim_func.__name__))
             self.current_animation = anim_func()
-            self.current_animation.timeline.finished.connect(self.on_animation_finished)
+            self.current_animation.finished.connect(self.on_animation_finished)
         else:
             _log.debug('Queueing animation {}'.format(anim_func.__name__))
             self.next_animation = anim_func
@@ -182,44 +194,49 @@ class OverlayApplication(QtGui.QApplication):
             self.window.setFixedSize(rect.width, rect.height)
 
     def _create_window(self, scene):
-        window = QtGui.QGraphicsView(scene)
+        window = QtWidgets.QGraphicsView(scene)
         window.setStyleSheet("background-color: transparent;")
         window.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         window.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         window.setWindowTitle("volcorner")
         window.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         window.setAttribute(Qt.WA_TranslucentBackground)
-        window.setFrameStyle(QtGui.QFrame.NoFrame)
+        window.setFrameStyle(QtWidgets.QFrame.NoFrame)
         self.on_update_rect(self.overlay_rect)
         self.on_update_transform(self.corner)
         return window
 
     def _animate(self, scale_in, scale_out, rotation_in, rotation_out, easing, completion=None,
-                 duration=DURATION, interval=16, segment_step=0.2):
+                 duration=DURATION, segment_step=0.2):
         animations = []
 
-        timeline = QtCore.QTimeLine(duration)
-        timeline.setUpdateInterval(interval)
-        timeline.setEasingCurve(easing)
+        for prop in (b'xScale', b'yScale'):
+            scale = QtCore.QPropertyAnimation(self.background_scale, prop)
+            scale.setStartValue(scale_in)
+            scale.setEndValue(scale_out)
+            animations.append(scale)
 
-        scale = QtGui.QGraphicsItemAnimation()
-        scale.setItem(self.background)
-        scale.setTimeLine(timeline)
-        scale.setScaleAt(0.0, scale_in, scale_in)
-        scale.setScaleAt(1.0, scale_out, scale_out)
-        animations.append(scale)
-
-        for i, segment in enumerate(reversed([self.dot] + self.segments)):
-            rotate = QtGui.QGraphicsItemAnimation()
-            rotate.setItem(segment)
-            rotate.setTimeLine(timeline)
-            rotate.setRotationAt(0.0, rotation_in)
-            rotate.setRotationAt(0.0 + segment_step * i, rotation_in)
-            rotate.setRotationAt(1.0, rotation_out)
+        for i, segment in enumerate(reversed([self.dot_rotation] + self.segments)):
+            # QGraphicsRotation has 'angle' instead of 'rotation'
+            prop = b'rotation' if hasattr(segment, 'rotation') else b'angle'
+            rotate = QtCore.QPropertyAnimation(segment, prop)
+            rotate.setTargetObject(segment)
+            rotate.setStartValue(rotation_in)
+            rotate.setKeyValueAt(segment_step * i, rotation_in)
+            rotate.setEndValue(rotation_out)
             animations.append(rotate)
 
-        timeline.start()
-        return Animation(timeline, animations, completion)
+        group = QtCore.QParallelAnimationGroup()
+        for animation in animations:
+            animation.setDuration(duration)
+            animation.setEasingCurve(easing)
+            group.addAnimation(animation)
+
+        if completion:
+            group.finished.connect(completion)
+
+        group.start()
+        return group
 
     def _animate_show(self):
         self.window.show()
@@ -237,14 +254,14 @@ class OverlayApplication(QtGui.QApplication):
         if not self._has_set_advanced_window_state:
             self._has_set_advanced_window_state = True
 
-            display = QtGui.QX11Info.display()
+            display = QX11Info.display()
             window_id = self.window.winId()
 
             xlib.move_to_desktop(display, window_id, xlib.ALL_DESKTOPS)
             xlib.set_empty_window_shape(display, window_id)
 
 
-class SegmentItem(QtGui.QGraphicsItem):
+class SegmentObject(QtWidgets.QGraphicsObject):
     """Graphics item for a segment of the volume display."""
     def __init__(self, config_json):
         super().__init__()
@@ -328,9 +345,6 @@ class SegmentItem(QtGui.QGraphicsItem):
         image = QtGui.QImage(path_to(filename))
         cropped = image.copy(bbox)
         return QtGui.QPixmap.fromImage(cropped)
-
-
-Animation = namedtuple('Animation', ['timeline', 'animations', 'completion'])
 
 
 def path_to(filename):
