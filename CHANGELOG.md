@@ -2,14 +2,6 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased][unreleased]
-### Added
-### Changed
-### Deprecated
-### Removed
-### Fixed
-### Security
-
 ## [0.3.0] - 2017-02-04
 ### Changed
 - Migrate from PyQt4 to PyQt5
