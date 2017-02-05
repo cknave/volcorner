@@ -79,7 +79,7 @@ int snd_mixer_selem_set_playback_dB_all(snd_mixer_elem_t *, long, int);
 # Set up C bindings
 ffi = FFI()
 ffi.cdef(CDEF)
-C = ffi.verify("#include <alsa/asoundlib.h>", libraries=["asound"])
+C = ffi.dlopen("libasound.so.2")
 
 # Python version of constants
 SND_MIXER_SCHN_UNKNOWN = C.SND_MIXER_SCHN_UNKNOWN
