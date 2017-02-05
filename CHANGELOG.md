@@ -5,8 +5,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased][unreleased]
 ### Added
 ### Changed
+- Using CFFI in ABI mode to load libasound.so.2 directly instead of needing to
+  compile an extension module
+
 ### Deprecated
 ### Removed
+- Removed dependency on Xlib since Qt5 supports XCB
+
 ### Fixed
 ### Security
 
