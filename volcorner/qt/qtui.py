@@ -13,13 +13,14 @@ from PyQt5 import QtWidgets
 from PyQt5.QtX11Extras import QX11Info
 import sip
 import xcffib
+import xcffib.shape
 import xcffib.xproto
+import xcffib.xfixes
 
 import volcorner
 from volcorner.corner import Corner
 from volcorner.rect import Rect
 from volcorner.ui import UI
-from volcorner.x11 import xlib
 
 _log = logging.getLogger("qtgui")
 
@@ -263,23 +264,21 @@ class OverlayApplication(QtWidgets.QApplication):
             conn = self._wrap_connection()
             window_id = int(self.window.winId())
             set_window_desktop(conn, window_id, ALL_DESKTOPS)
-
-            # TODO: Here we are, use xcb to set window shape
-            display = QX11Info.display()
-            xlib.set_empty_window_shape(display, window_id)
-
+            set_empty_window_shape(conn, conn.xfixes, window_id)
             conn.flush()
 
     @staticmethod
     def _wrap_connection():
         """
-        Wrap the current Qt xcb connection in an xcffib object.
+        Wrap the current Qt xcb connection in an xcffib Connection object.
 
         :return: xcffib object
         """
-        connection = QX11Info.connection()
-        conn_ptr = sip.unwrapinstance(connection)
-        return xcffib.wrap(conn_ptr)
+        qt_conn = QX11Info.connection()
+        conn_ptr = sip.unwrapinstance(qt_conn)
+        conn = xcffib.wrap(conn_ptr)
+        conn.xfixes = _load_xfixes(conn)
+        return conn
 
 
 class SegmentObject(QtWidgets.QGraphicsObject):
@@ -378,7 +377,13 @@ def clamp(minimum, value, maximum):
 
 
 def set_window_desktop(conn, window_id, desktop):
-    net_wm_desktop = intern_atom(conn, '_NET_WM_DESKTOP')
+    """Set the virtual desktop for a window.
+
+    :param xcffib.Connection conn: XCB connection
+    :param window_id: window to change
+    :param desktop: desktop to set, or ALL_DESKTOPS to show on all desktops
+    """
+    net_wm_desktop = _intern_atom(conn, '_NET_WM_DESKTOP')
     conn.core.ChangeProperty(xcffib.xproto.PropMode.Replace,
                              window_id,
                              net_wm_desktop,
@@ -389,5 +394,49 @@ def set_window_desktop(conn, window_id, desktop):
                              is_checked=True)
 
 
-def intern_atom(conn, name):
+def set_empty_window_shape(conn, xfixes, window_id):
+    """Set an empty input shape on a window.
+
+    This will prevent the window from receiving any input.
+
+    :param xcffib.Connection conn: XCB connection
+    :param xcffib.xfixes.xfixesExtension xfixes: XFixes extension
+    :param int window_id: window to change
+    """
+    region_id = conn.generate_id()
+    xfixes.CreateRegion(region_id, 0, [])
+    xfixes.SetWindowShapeRegion(window_id, xcffib.shape.SK.Input, 0, 0, region_id,
+                                is_checked=True)
+
+
+def _intern_atom(conn, name):
+    """Get an atom for a string.
+
+    :param xcffib.Connection: XCB connection
+    :param str name: string to look up
+    :returns: atom
+    :rtype: int
+    """
     return conn.core.InternAtom(False, len(name), name).reply().atom
+
+
+def _load_xfixes(conn):
+    """Return the XFixes extension, checking for at least version 2.
+
+    :param xcffib.Connection conn: XCB connection
+    :raises ValueError: if a compatible XFixes extension is not present
+    :returns: the XFixes extension
+    :rtype: xcffib.xfixes.xfixesExtension
+    """
+    xfixes_major, xfixes_minor = (2, 0)
+    try:
+        xfixes = conn(xcffib.xfixes.key)
+        reply = xfixes.QueryVersion(xfixes_major, xfixes_minor).reply()
+    except:
+        _log.error("Failed to get XFixes 2", exc_info=True)
+        raise ValueError("XFixes 2 is required.")
+    if reply.major_version < 2:
+        _log.error("Need XFixes 2, but only %d.%d is avaliable", reply.major_version,
+                   reply.minor_version)
+        raise ValueError("XFixes 2 is required.")
+    return xfixes
