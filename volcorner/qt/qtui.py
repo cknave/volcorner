@@ -1,9 +1,9 @@
 """Qt user interface."""
 
-from collections import namedtuple
 import json
 import logging
 import os.path
+import struct
 from pkg_resources import resource_filename
 
 from PyQt5 import QtCore
@@ -11,6 +11,9 @@ from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5.QtX11Extras import QX11Info
+import sip
+import xcffib
+import xcffib.xproto
 
 import volcorner
 from volcorner.corner import Corner
@@ -22,6 +25,9 @@ _log = logging.getLogger("qtgui")
 
 # Animation duration in ms
 DURATION = 200
+
+# X11 desktop ID for "all desktops"
+ALL_DESKTOPS = -1
 
 
 class QtUI(UI):
@@ -254,11 +260,26 @@ class OverlayApplication(QtWidgets.QApplication):
         if not self._has_set_advanced_window_state:
             self._has_set_advanced_window_state = True
 
-            display = QX11Info.display()
-            window_id = self.window.winId()
+            conn = self._wrap_connection()
+            window_id = int(self.window.winId())
+            set_window_desktop(conn, window_id, ALL_DESKTOPS)
 
-            xlib.move_to_desktop(display, window_id, xlib.ALL_DESKTOPS)
+            # TODO: Here we are, use xcb to set window shape
+            display = QX11Info.display()
             xlib.set_empty_window_shape(display, window_id)
+
+            conn.flush()
+
+    @staticmethod
+    def _wrap_connection():
+        """
+        Wrap the current Qt xcb connection in an xcffib object.
+
+        :return: xcffib object
+        """
+        connection = QX11Info.connection()
+        conn_ptr = sip.unwrapinstance(connection)
+        return xcffib.wrap(conn_ptr)
 
 
 class SegmentObject(QtWidgets.QGraphicsObject):
@@ -354,3 +375,19 @@ def path_to(filename):
 
 def clamp(minimum, value, maximum):
     return max(minimum, min(maximum, value))
+
+
+def set_window_desktop(conn, window_id, desktop):
+    net_wm_desktop = intern_atom(conn, '_NET_WM_DESKTOP')
+    conn.core.ChangeProperty(xcffib.xproto.PropMode.Replace,
+                             window_id,
+                             net_wm_desktop,
+                             xcffib.xproto.Atom.CARDINAL,
+                             32,
+                             1,
+                             struct.pack('i', desktop),
+                             is_checked=True)
+
+
+def intern_atom(conn, name):
+    return conn.core.InternAtom(False, len(name), name).reply().atom
