@@ -6,6 +6,7 @@ requires = [
     'smokesignal',
     'xcffib>0.4.1',
     'pyqt5',
+    'quamash',
 ]
 
 tests_require = [

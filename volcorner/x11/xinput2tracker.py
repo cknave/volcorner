@@ -18,15 +18,18 @@ _log = logging.getLogger("tracking")
 
 class XInput2MouseTracker(MouseTracker):
     """XInput mouse tracker."""
-    def __init__(self):
+    def __init__(self, xcb_connection=None):
         super().__init__()
-        self._conn = None
+        self._conn = xcb_connection
         self._root = None
         self._thread = None
+        self._opened_connection = False
 
     def start(self):
         # Connect to X server and load extensions.
-        self._conn = xcffib.connect()
+        if self._conn is None:
+            self._conn = xcffib.connect()
+            self._opened_connection = True
         self._root = self._conn.setup.roots[0].root
         self._conn.xinput = self._load_xinput()
 
@@ -51,8 +54,9 @@ class XInput2MouseTracker(MouseTracker):
 
         # Close the X connection.
         self._root = None
-        self._conn.disconnect()
-        self._conn = None
+        if self._opened_connection:
+            self._conn.disconnect()
+            self._conn = None
 
     @run_on_thread('_thread')
     def grab_scroll(self):

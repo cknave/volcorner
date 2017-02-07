@@ -4,6 +4,7 @@
 import logging
 import signal
 
+import asyncio
 import smokesignal
 from volcorner import signals
 from volcorner.alsa.alsamixer import ALSAMixer
@@ -51,24 +52,29 @@ class Volcorner:
         smokesignal.on(signals.CHANGE_VOLUME, self.on_change_volume)
 
     def run(self):
+        _log.debug("Starting event loop")
+        self.ui = QtUI()
+        self.ui.set_event_loop()
+        _log.debug("Event loop ready")
+
         _log.debug("Opening mixer")
         self.mixer = ALSAMixer()
         self.mixer.open()
         _log.info("Mixer ready")
 
         _log.debug("Opening screen")
-        self.screen = RandRScreen()
+        self.screen = RandRScreen(self.ui)
         self.screen.open()
         _log.info("Screen ready")
 
         _log.debug("Opening mouse tracker")
         self.tracker = XInput2MouseTracker()
+        # TODO self.tracker = XInput2MouseTracker(self.ui.xcb_connection)
         self._update_tracking_regions()
         self.tracker.start()
         _log.info("Mouse tracker running")
 
         _log.debug("Loading UI")
-        self.ui = QtUI()
         self.ui.corner = self._corner
         self.ui.volume = self.mixer.volume
         self._update_ui_rect()
@@ -83,7 +89,7 @@ class Volcorner:
             # Example of doing something crazy with sockets to get around this:
             # https://github.com/sijk/qt-unix-signals
             signal.signal(signal.SIGINT, signal.SIG_DFL)
-            self.ui.run_main_loop()
+            asyncio.get_event_loop().run_forever()
         finally:
             _log.info("Shutting down")
             self.tracker.stop()

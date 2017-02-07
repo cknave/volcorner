@@ -17,8 +17,22 @@ class UI(metaclass=ABCMeta):
         """Load all assets and prepare the UI."""
 
     @abstractmethod
-    def run_main_loop(self):
-        """Run the main loop until stop() is called."""
+    def set_event_loop(self):
+        """Call asyncio.set_event_loop with the event loop for this UI."""
+
+    @abstractmethod
+    def install_event_filter(self, event_filter):
+        """Install an event filter.
+
+        :param event_filter: platform-specific event filter (e.g. QAbstractNativeEventFilter)
+        """
+
+    @abstractmethod
+    def remove_event_filter(self, event_filter):
+        """Remove an event filter.
+
+        :param event_filter: event_filter that was passed to install_event_filter()
+        """
 
     @abstractmethod
     def show(self):
@@ -27,10 +41,6 @@ class UI(metaclass=ABCMeta):
     @abstractmethod
     def hide(self):
         """Hide the UI overlay."""
-
-    @abstractmethod
-    def stop(self):
-        """Stop running the UI main loop."""
 
     @property
     def corner(self):

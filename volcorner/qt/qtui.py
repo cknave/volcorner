@@ -1,21 +1,24 @@
 """Qt user interface."""
 
+import asyncio
 import json
 import logging
 import os.path
-import struct
 from pkg_resources import resource_filename
+import struct
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5.QtX11Extras import QX11Info
+from quamash import QEventLoop
 import sip
 import xcffib
 import xcffib.shape
-import xcffib.xproto
 import xcffib.xfixes
+import xcffib.xproto
+from xcffib._ffi import ffi  # Seems to be no public way to parse an event pointer
 
 import volcorner
 from volcorner.corner import Corner
@@ -36,21 +39,21 @@ class QtUI(UI):
     def __init__(self):
         super().__init__()
         self.app = OverlayApplication()
+        self.xcb_connection = self.app.xcb_connection
+        self._eventFilters = {}
 
     def load(self):
         self.app.load()
 
-    def run_main_loop(self):
-        self.app.exec_()
+    def set_event_loop(self):
+        loop = QEventLoop(self.app)
+        asyncio.set_event_loop(loop)
 
     def show(self):
         self.app.show_overlay.emit()
 
     def hide(self):
         self.app.hide_overlay.emit()
-
-    def stop(self):
-        self.app.stop.emit()
 
     @property
     def corner(self):
@@ -84,11 +87,25 @@ class QtUI(UI):
         UI.volume.__set__(self, volume)
         self.app.update_volume.emit(volume)
 
+    def install_event_filter(self, event_filter):
+        # Wrap filter function in required class
+        filter_obj = NativeEventFilter(self.xcb_connection, event_filter)
+        self._eventFilters[event_filter] = filter_obj
+        self.app.installNativeEventFilter(filter_obj)
+
+    def remove_event_filter(self, event_filter):
+        # Uninstall previously wrapped filter object
+        try:
+            filter_obj = self._eventFilters[event_filter]
+        except KeyError:
+            _log.warning("Tried to uninstall event filter that's not installed: %r", event_filter)
+            return
+        self.app.removeNativeEventFilter(filter_obj)
+
 
 class OverlayApplication(QtWidgets.QApplication):
     show_overlay = QtCore.pyqtSignal()
     hide_overlay = QtCore.pyqtSignal()
-    stop = QtCore.pyqtSignal()
     update_transform = QtCore.pyqtSignal(Corner)
     update_volume = QtCore.pyqtSignal(float)
     update_rect = QtCore.pyqtSignal(Rect)
@@ -107,11 +124,12 @@ class OverlayApplication(QtWidgets.QApplication):
         self.corner = None
         self.window = None
         self._has_set_advanced_window_state = False
+        self.xcb_connection = self.wrap_connection()
 
         # Use a queued connection since these can be called from another thread
+        # TODO: once threads are removed, don't use QueuedConnection
         self.show_overlay.connect(self.on_show, Qt.QueuedConnection)
         self.hide_overlay.connect(self.on_hide, Qt.QueuedConnection)
-        self.stop.connect(self.on_stop, Qt.QueuedConnection)
         self.update_transform.connect(self.on_update_transform, Qt.QueuedConnection)
         self.update_volume.connect(self.on_update_volume, Qt.QueuedConnection)
         self.update_rect.connect(self.on_update_rect, Qt.QueuedConnection)
@@ -169,9 +187,6 @@ class OverlayApplication(QtWidgets.QApplication):
 
     def on_hide(self):
         self.queue_animation(self._animate_hide)
-
-    def on_stop(self):
-        self.quit()
 
     def on_update_transform(self, corner):
         if (self.window is not None) and (self.overlay_rect is not None):
@@ -260,15 +275,13 @@ class OverlayApplication(QtWidgets.QApplication):
         # Only need to set this state once.
         if not self._has_set_advanced_window_state:
             self._has_set_advanced_window_state = True
-
-            conn = self._wrap_connection()
             window_id = int(self.window.winId())
-            set_window_desktop(conn, window_id, ALL_DESKTOPS)
-            set_empty_window_shape(conn, conn.xfixes, window_id)
-            conn.flush()
+            set_window_desktop(self.xcb_connection, window_id, ALL_DESKTOPS)
+            set_empty_window_shape(self.xcb_connection, self.xcb_connection.xfixes, window_id)
+            self.xcb_connection.flush()
 
     @staticmethod
-    def _wrap_connection():
+    def wrap_connection():
         """
         Wrap the current Qt xcb connection in an xcffib Connection object.
 
@@ -440,3 +453,23 @@ def _load_xfixes(conn):
                    reply.minor_version)
         raise ValueError("XFixes 2 is required.")
     return xfixes
+
+
+class NativeEventFilter(QtCore.QAbstractNativeEventFilter):
+    def __init__(self, conn, event_filter):
+        super().__init__()
+        self.conn = conn
+        self.event_filter = event_filter
+
+    # Detected method signature is wrong.  Should be:
+    # nativeEventFilter(self, Union[QByteArray, bytes, bytearray], sip.voidptr) -> Tuple[bool, int]
+    # noinspection PyMethodOverriding
+    def nativeEventFilter(self, event_type, message):
+        if event_type != 'xcb_generic_event_t':
+            _log.warning('Unexpected native event type %s', event_type)
+            return False, 0
+        generic_event = ffi.cast('xcb_generic_event_t *', message)
+        event = self.conn.hoist_event(generic_event)
+        result = self.event_filter(event)
+        dummy_result = 0  # Used on windows apparently
+        return bool(result), dummy_result
