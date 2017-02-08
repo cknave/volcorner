@@ -9,9 +9,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   compile an extension module
 - Updated RandRScreen and XInput2MouseTracker to share Qt's event stream
   instead of creating two additional X connections 
+- Updated ALSAMixer to use asyncio instead of a polling thread
+
 ### Deprecated
 ### Removed
 - Removed dependency on Xlib since Qt5 supports XCB
+- Removed ALSA polling tests, since we are no longer polling
 
 ### Fixed
 ### Security

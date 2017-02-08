@@ -1,4 +1,5 @@
 """ALSA mixer."""
+import asyncio
 
 __all__ = ['ALSAMixer']
 
@@ -24,10 +25,8 @@ class ALSAMixer(Mixer):
         self._control_name = control
         self._mixer = None
         self._control = None
-        self._thread = None
-        self._break_r = None
-        self._break_w = None
         self._supports_db = False
+        self._listening_fds = []
 
     def open(self):
         if self._mixer is not None:
@@ -45,31 +44,17 @@ class ALSAMixer(Mixer):
         except mixercffi.ALSAMixerError:
             self._supports_db = False
 
-        # Start watching the mixer in a background thread, with a pipe to cancel it.
-        self._break_r, self._break_w = os.pipe()
-        self._thread = threading.Thread(
-            target=self._watch_volume,
-            name="ALSAMixer",
-            kwargs={'breakfd': self._break_r},
-            daemon=True)
-        self._thread.start()
+        # Listen for mixer updates.
+        for fd in self._mixer.get_poll_fds():
+            asyncio.get_event_loop().add_reader(fd, self.on_mixer_ready)
 
     def close(self):
         if self._mixer is None:
             _log.error("Tried to close already-closed mixer")
             return
 
-        # Stop the watcher thread.
-        os.write(self._break_w, b"1")
-        os.close(self._break_w)
-        self._thread.join()
-
-        # Clean up references.
-        self._mixer = None
-        self._control = None
-        self._thread = None
-        self._break_r = None
-        self._break_w = None
+        for fd in self._listening_fds:
+            asyncio.get_event_loop().remove_reader(fd)
 
     @property
     def volume(self):
@@ -120,22 +105,12 @@ class ALSAMixer(Mixer):
             _log.debug("Setting %d hw volume", volume)
             self._control.set_raw_volume(volume)
 
-    def _watch_volume(self, breakfd):
-        """
-        Watch for changes in volume until a file descriptor is written to.
-
-        :param int breakfd: when this file descriptor is read from, stop polling
-        """
+    def on_mixer_ready(self):
         assert self._mixer is not None
-
-        # Loop until we read from breakfd.
-        while True:
-            if not self._mixer.poll(breakfd):
-                break
-            # Update the volume.
-            _log.debug("Got mixer event")
-            self.on_volume_changed(self.volume)
-        os.close(breakfd)
+        _log.debug("Mixer is ready, handling events.")
+        self._mixer.handle_events()
+        _log.debug("Finished handling mixer events.")
+        self.on_volume_changed(self.volume)
 
 
 ##
