@@ -7,7 +7,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Using CFFI in ABI mode to load libasound.so.2 directly instead of needing to
   compile an extension module
-
+- Updated RandRScreen and XInput2MouseTracker to share Qt's event stream
+  instead of creating two additional X connections 
 ### Deprecated
 ### Removed
 - Removed dependency on Xlib since Qt5 supports XCB

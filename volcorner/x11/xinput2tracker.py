@@ -1,7 +1,5 @@
 """XInput2 mouse tracker."""
 
-__all__ = ['XInput2MouseTracker']
-
 import logging
 
 import xcffib
@@ -9,63 +7,49 @@ from xcffib.xproto import ButtonPressEvent, EventMask, GeGenericEvent, GrabMode,
 import xcffib.xinput
 from volcorner.rect import Point
 import volcorner.logging
-from volcorner.pollthread import PollThread, run_on_thread
 from volcorner.tracker import MouseTracker
 
-
+__all__ = ['XInput2MouseTracker']
 _log = logging.getLogger("tracking")
 
 
 class XInput2MouseTracker(MouseTracker):
     """XInput mouse tracker."""
-    def __init__(self, xcb_connection=None):
+    def __init__(self, ui):
+        """
+        Initialize a new XInput2MouseTracker.
+
+        :param volcorner.qt.qtui.QtUI ui: UI to install an event handler and get XCB connection from
+        """
         super().__init__()
-        self._conn = xcb_connection
+        self._ui = ui
+        self._conn = ui.xcb_connection
         self._root = None
-        self._thread = None
-        self._opened_connection = False
+        self._is_listening = False
 
     def start(self):
-        # Connect to X server and load extensions.
-        if self._conn is None:
-            self._conn = xcffib.connect()
-            self._opened_connection = True
         self._root = self._conn.setup.roots[0].root
         self._conn.xinput = self._load_xinput()
 
         # Select XInput motion events.
         self._select_motion_events()
 
-        # Process events on a background thread.
-        self._thread = PollThread(
-            target=self._tracker_loop,
-            name="XInput2MouseTracker",
-            daemon=True)
-        self._thread.start()
+        # Listen for input events.
+        self._ui.install_event_filter(self.on_event)
+        self._is_listening = True
 
     def stop(self):
-        # Do nothing if already stopped.
-        if self._thread is None:
+        if not self._is_listening:
             return
 
-        # Wait for the thread to finish.
-        self._thread.stop()
-        self._thread = None
+        self._ui.remove_event_filter(self.on_event)
 
-        # Close the X connection.
-        self._root = None
-        if self._opened_connection:
-            self._conn.disconnect()
-            self._conn = None
-
-    @run_on_thread('_thread')
     def grab_scroll(self):
         # Buttons 4 and 5 are the scroll wheel.
         self._grab_button(4)
         self._grab_button(5)
         self._conn.flush()
 
-    @run_on_thread('_thread')
     def ungrab_scroll(self):
         # Buttons 4 and 5 are the scroll wheel.
         self._ungrab_button(4)
@@ -110,20 +94,7 @@ class XInput2MouseTracker(MouseTracker):
         modifiers = ModMask.Any
         self._conn.core.UngrabButton(button, self._root, modifiers)
 
-    def _tracker_loop(self):
-        """Thread main loop."""
-        fd = self._conn.get_file_descriptor()
-        self._thread.poll(lambda _: self._handle_all_events(), fd)
-
-    def _handle_all_events(self):
-        """Handle all available X events."""
-        while True:
-            event = self._conn.poll_for_event()
-            if event is None:
-                break
-            self._handle_event(event)
-
-    def _handle_event(self, event):
+    def on_event(self, event):
         """Handle an X event."""
         if isinstance(event, GeGenericEvent):
             # GeGenericEvent is an XInput2 pointer event.
@@ -138,5 +109,3 @@ class XInput2MouseTracker(MouseTracker):
                 self.on_scroll_up()
             elif event.detail == 5:
                 self.on_scroll_down()
-        else:
-            _log.debug("Ignoring event %r", event)

@@ -68,7 +68,7 @@ class Volcorner:
         _log.info("Screen ready")
 
         _log.debug("Opening mouse tracker")
-        self.tracker = XInput2MouseTracker()
+        self.tracker = XInput2MouseTracker(self.ui)
         # TODO self.tracker = XInput2MouseTracker(self.ui.xcb_connection)
         self._update_tracking_regions()
         self.tracker.start()

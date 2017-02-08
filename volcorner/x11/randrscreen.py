@@ -30,9 +30,6 @@ class RandRScreen(Screen):
 
     def open(self):
         # Connect to X server and load extensions.
-        if self._conn is None:
-            self._conn = xcffib.connect()
-            self._opened_connection = True
         self._root = self._conn.setup.roots[0].root
         self._conn.randr = self._load_randr()
 
@@ -55,11 +52,6 @@ class RandRScreen(Screen):
         self._root = None
         self._size = None
         self._listening = False
-
-        # If we're borrowing an existing X connection, don't close it.
-        if self._opened_connection:
-            self._conn.disconnect()
-            self._conn = None
 
     @property
     def size(self):
