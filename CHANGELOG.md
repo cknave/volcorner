@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.3.1] - 2017-02-09
+### Changed
+- Using CFFI in ABI mode to load libasound.so.2 directly instead of needing to
+  compile an extension module
+- Updated RandRScreen and XInput2MouseTracker to share Qt's event stream
+  instead of creating two additional X connections 
+- Updated ALSAMixer to use asyncio instead of a polling thread
+
+### Removed
+- Removed dependency on Xlib since Qt5 supports XCB
+- Removed ALSA polling tests, since we are no longer polling
+
 ## [0.3.0] - 2017-02-04
 ### Changed
 - Migrate from PyQt4 to PyQt5
@@ -56,7 +68,6 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[unreleased]: https://github.com/cknave/volcorner/compare/volcorner-0.3.0...HEAD
 [0.1.1]: https://github.com/cknave/volcorner/compare/volcorner-0.1.0...volcorner-0.1.1
 [0.1.2]: https://github.com/cknave/volcorner/compare/volcorner-0.1.1...volcorner-0.1.2
 [0.1.3]: https://github.com/cknave/volcorner/compare/volcorner-0.1.2...volcorner-0.1.3
@@ -65,3 +76,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 [0.2.2]: https://github.com/cknave/volcorner/compare/volcorner-0.2.1...volcorner-0.2.2
 [0.2.3]: https://github.com/cknave/volcorner/compare/volcorner-0.2.2...volcorner-0.2.3
 [0.3.0]: https://github.com/cknave/volcorner/compare/volcorner-0.2.3...volcorner-0.3.0
+[0.3.1]: https://github.com/cknave/volcorner/compare/volcorner-0.3.0...volcorner-0.3.1

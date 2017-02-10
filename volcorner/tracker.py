@@ -1,7 +1,5 @@
 """Mouse tracking abstract base class."""
 
-__all__ = ['MouseTracker']
-
 from abc import ABCMeta, abstractmethod
 import logging
 
@@ -9,6 +7,7 @@ import smokesignal
 
 from volcorner import signals
 
+__all__ = ['MouseTracker']
 _log = logging.getLogger("tracking")
 
 

@@ -1,12 +1,15 @@
 """Test utilities."""
+from asyncio import Event
 
+import asyncio
 from functools import wraps
 import subprocess
-from threading import Event
 
 from nose import with_setup
 import smokesignal
 from xcffib.testing import XvfbTest
+
+from volcorner.x11.x11emptyui import X11EmptyUI
 
 # Remember the result of our xte check.
 _has_xte = None
@@ -31,7 +34,8 @@ class SignalReceiver:
 
     def wait(self, timeout=None):
         """Wait for the signal to be received."""
-        self.event.wait(timeout)
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(asyncio.wait_for(self.event.wait(), timeout))
 
 
 def with_xvfb(f):
@@ -39,6 +43,21 @@ def with_xvfb(f):
     import xcffib.xproto  # Needed for an xcffib core to exist
     xvfb = XvfbTest()
     return with_setup(setup=xvfb.setUp, teardown=xvfb.tearDown)(f)
+
+
+def with_ui(f):
+    """Decorator to start and shut down an X11EmptyUI.
+
+    The decorated function will receive a ui= keyword argument with the UI.
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        ui = X11EmptyUI()
+        ui.load()
+        kwargs['ui'] = ui
+        f(*args, **kwargs)
+        ui.stop()
+    return wrapper
 
 
 def with_xte(f):

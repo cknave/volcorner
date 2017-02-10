@@ -105,4 +105,3 @@ def test_override_config_file_path():
         assert path == "/overridden"
         user_path = os.path.join(tmpdir, volcorner.config.FILENAME)
         assert not os.path.exists(user_path)
-

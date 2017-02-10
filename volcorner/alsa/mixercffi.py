@@ -1,5 +1,7 @@
 """Minimal ALSA mixer CFFI binding."""
 
+from cffi import FFI
+
 __all__ = [
     "ALSAMixerError",
     "Control",
@@ -17,9 +19,6 @@ __all__ = [
     "SND_MIXER_SCHN_LAST",
     "SND_MIXER_SCHN_MONO",
 ]
-
-from cffi import FFI
-import select
 
 CDEF = """
 typedef ... snd_mixer_t;
@@ -64,9 +63,13 @@ void snd_mixer_selem_id_free(snd_mixer_selem_id_t *obj);
 void snd_mixer_selem_id_set_name(snd_mixer_selem_id_t *obj, const char *val);
 snd_mixer_elem_t *snd_mixer_find_selem(snd_mixer_t *mixer,
            const snd_mixer_selem_id_t *id);
-int snd_mixer_selem_set_playback_volume(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, long value);
+int snd_mixer_selem_set_playback_volume(snd_mixer_elem_t *elem,
+                                        snd_mixer_selem_channel_id_t
+                                        channel, long value);
 int snd_mixer_selem_set_playback_volume_all(snd_mixer_elem_t *elem, long value);
-int snd_mixer_selem_get_playback_volume(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, long *value);
+int snd_mixer_selem_get_playback_volume(snd_mixer_elem_t *elem,
+                                        snd_mixer_selem_channel_id_t channel,
+                                        long *value);
 int snd_mixer_handle_events(snd_mixer_t *mixer);
 
 int snd_mixer_selem_get_playback_dB_range(snd_mixer_elem_t *, long *, long *);
@@ -79,7 +82,7 @@ int snd_mixer_selem_set_playback_dB_all(snd_mixer_elem_t *, long, int);
 # Set up C bindings
 ffi = FFI()
 ffi.cdef(CDEF)
-C = ffi.verify("#include <alsa/asoundlib.h>", libraries=["asound"])
+C = ffi.dlopen("libasound.so.2")
 
 # Python version of constants
 SND_MIXER_SCHN_UNKNOWN = C.SND_MIXER_SCHN_UNKNOWN
@@ -142,36 +145,26 @@ class Mixer:
         finally:
             C.snd_mixer_selem_id_free(elem_id)
 
-    def poll(self, breakfd=None, timeout=None):
+    def handle_events(self):
         """
-        Poll for ALSA events on this Mixer.
+        Instruct the mixer to handle events.
 
-        :param int breakfd: An additional file descriptor to poll
-        :param int timeout: Optional timeout, in milliseconds
-        :return: True if an ALSA event was handled, False if breakfd was polled or timed out
+        This should only be called when one of the fds from get_poll_fds() is ready to read.
+
+        :throws ALSAMixerError: on error handling events
         """
-        # Prepare the poll object.
-        fds = self._get_poll_descriptors()
-        poll = self._poll_obj_from_fds(fds)
-        if breakfd is not None:
-            poll.register(breakfd)
+        _chk(C.snd_mixer_handle_events(self.mixer))
 
-        # Wait for an update.
-        results = poll.poll(timeout)
+    def get_poll_fds(self):
+        """
+        Get a list of file descriptors to poll for read.
 
-        # Process the update, unless it was the break fd.
-        alsa_results = [f for f in results if f[0] != breakfd]
-        if len(alsa_results) > 0:
-            result_fds = self._fds_from_poll_results(alsa_results)
-            revents = ffi.new("unsigned short[1]")
-            _chk(C.snd_mixer_poll_descriptors_revents(self.mixer, result_fds, len(alsa_results), revents))
-            if revents[0] & (select.POLLERR | select.POLLNVAL):
-                raise ALSAMixerError("Mixer read error", revents[0])
-            _chk(C.snd_mixer_handle_events(self.mixer))
-            return True
-        return False
+        :return: list of fds
+        """
+        pollfds = self._get_pollfd_structs()
+        return [p.fd for p in pollfds]
 
-    def _get_poll_descriptors(self):
+    def _get_pollfd_structs(self):
         """Get a list of pollfd structs for this Mixer."""
         # Get the poll descriptor count
         expected = C.snd_mixer_poll_descriptors_count(self.mixer)
@@ -185,23 +178,6 @@ class Mixer:
             raise ALSAMixerError("No poll descriptors returned", count)
 
         return fds[0:count]
-
-    @staticmethod
-    def _poll_obj_from_fds(fds):
-        """Convert a list of pollfd structs into a :class:`select.poll`."""
-        poll_obj = select.poll()
-        for pollfd in fds:
-            poll_obj.register(pollfd.fd, pollfd.events)
-        return poll_obj
-
-    @staticmethod
-    def _fds_from_poll_results(results):
-        """Convert the results of :meth:`select.poll.poll()` to a list of pollfd structs."""
-        fds = ffi.new("struct pollfd[{}]".format(len(results)))
-        for i, result in enumerate(results):
-            fds[i].fd = result[0]
-            fds[i].revents = result[1]
-        return fds
 
 
 class Control:
@@ -282,7 +258,8 @@ class Control:
 
         :param volume: The new volume
         :param int channel: The channel number
-        :param int dir: Select direction (-1 = accurate or first bellow, 0 = accurate, 1 = accurate or first above)
+        :param int dir: Select direction (-1 = accurate or first bellow, 0 = accurate, 1 = accurate
+                        or first above)
         """
         if channel is None:
             _chk(C.snd_mixer_selem_set_playback_dB_all(self.elem, volume, dir))

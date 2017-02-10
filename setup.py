@@ -1,14 +1,12 @@
 from setuptools import setup, find_packages
 
-import volcorner.x11.xlib
-import volcorner.alsa.mixercffi
-
 requires = [
     'appdirs',
     'cffi',
     'smokesignal',
     'xcffib>0.4.1',
     'pyqt5',
+    'quamash',
 ]
 
 tests_require = [
@@ -34,13 +32,6 @@ setup(name='volcorner',
       keywords='volume hot corner hotcorner',
       packages=find_packages(),
       package_data={'volcorner': ['images/*']},
-      # CFFI is not zip safe
-      zip_safe=False,
-      ext_modules=[
-          # TODO: only include xlib if using Qt
-          volcorner.x11.xlib.ffi.verifier.get_extension(),
-          volcorner.alsa.mixercffi.ffi.verifier.get_extension()
-      ],
       entry_points={
           'console_scripts': [
               'volcorner = volcorner.scripts.main:main'
