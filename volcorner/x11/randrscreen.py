@@ -19,7 +19,7 @@ class RandRScreen(Screen):
 
         The given UI will be used for its xcb_connection to load the RandR extension,   
 
-        :param volcorner.qt.qtui.QtUI ui: UI to attach to
+        :param volcorner.ui.XCBUI ui: UI to attach to
         """
         self._ui = ui
         self._conn = ui.xcb_connection

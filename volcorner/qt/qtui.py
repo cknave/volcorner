@@ -23,7 +23,7 @@ from xcffib._ffi import ffi  # Seems to be no public way to parse an event point
 import volcorner
 from volcorner.corner import Corner
 from volcorner.rect import Rect
-from volcorner.ui import UI
+from volcorner.ui import XCBUI
 
 _log = logging.getLogger("qtgui")
 
@@ -34,7 +34,7 @@ DURATION = 200
 ALL_DESKTOPS = -1
 
 
-class QtUI(UI):
+class QtUI(XCBUI):
     """Qt user interface."""
     def __init__(self):
         super().__init__()
@@ -62,7 +62,7 @@ class QtUI(UI):
     # Can't call super().property.__set__: http://bugs.python.org/issue14965
     @corner.setter
     def corner(self, corner):
-        UI.corner.__set__(self, corner)
+        XCBUI.corner.__set__(self, corner)
         self.app.corner = corner
         self.app.update_transform.emit(corner)
 
@@ -73,7 +73,7 @@ class QtUI(UI):
     # Can't call super().property.__set__: http://bugs.python.org/issue14965
     @overlay_rect.setter
     def overlay_rect(self, overlay_rect):
-        UI.overlay_rect.__set__(self, overlay_rect)
+        XCBUI.overlay_rect.__set__(self, overlay_rect)
         self.app.overlay_rect = overlay_rect
         self.app.update_rect.emit(overlay_rect)
 
@@ -84,7 +84,7 @@ class QtUI(UI):
     # Can't call super().property.__set__: http://bugs.python.org/issue14965
     @volume.setter
     def volume(self, volume):
-        UI.volume.__set__(self, volume)
+        XCBUI.volume.__set__(self, volume)
         self.app.update_volume.emit(volume)
 
     def install_event_filter(self, event_filter):

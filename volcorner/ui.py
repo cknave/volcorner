@@ -1,8 +1,8 @@
 """Abstract user interface."""
 
-__all__ = ['UI']
-
 from abc import ABCMeta, abstractmethod
+
+__all__ = ['UI', 'XCBUI']
 
 
 class UI(metaclass=ABCMeta):
@@ -71,3 +71,9 @@ class UI(metaclass=ABCMeta):
     def volume(self, volume):
         """Set the displayed volume level."""
         self._volume = volume
+
+
+class XCBUI(UI, metaclass=ABCMeta):
+    def __init__(self):
+        super().__init__()
+        self.xcb_connection = None

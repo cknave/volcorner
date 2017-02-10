@@ -5,8 +5,8 @@ import logging
 import xcffib
 from xcffib.xproto import ButtonPressEvent, EventMask, GeGenericEvent, GrabMode, ModMask
 import xcffib.xinput
+from volcorner.logging import TRACE
 from volcorner.rect import Point
-import volcorner.logging
 from volcorner.tracker import MouseTracker
 
 __all__ = ['XInput2MouseTracker']
@@ -19,7 +19,7 @@ class XInput2MouseTracker(MouseTracker):
         """
         Initialize a new XInput2MouseTracker.
 
-        :param volcorner.qt.qtui.QtUI ui: UI to install an event handler and get XCB connection from
+        :param volcorner.ui.XCBUI ui: UI to install an event handler and get XCB connection from
         """
         super().__init__()
         self._ui = ui
@@ -101,7 +101,7 @@ class XInput2MouseTracker(MouseTracker):
             # Update the pointer position.
             pointer = self._conn.core.QueryPointer(self._root).reply()
             self.last_point = Point(pointer.root_x, pointer.root_y)
-            _log.log(volcorner.logging.TRACE, "Pointer event %s", self._last_point)
+            _log.log(TRACE, "Pointer event %s", self._last_point)
         elif isinstance(event, ButtonPressEvent):
             # Button press is a scroll up/down event.
             _log.debug("Button press event %s", event.detail)
@@ -109,3 +109,5 @@ class XInput2MouseTracker(MouseTracker):
                 self.on_scroll_up()
             elif event.detail == 5:
                 self.on_scroll_down()
+        else:
+            _log.log(TRACE, "Ignoring event %s", event)

@@ -53,7 +53,9 @@ class Volcorner:
 
     def run(self):
         _log.debug("Starting event loop")
-        self.ui = QtUI()
+        # self.ui = QtUI()
+        from volcorner.x11.x11emptyui import X11EmptyUI
+        self.ui = X11EmptyUI()
         self.ui.set_event_loop()
         _log.debug("Event loop ready")
 
