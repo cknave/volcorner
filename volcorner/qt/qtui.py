@@ -41,9 +41,12 @@ class QtUI(XCBUI):
         self.app = OverlayApplication()
         self.xcb_connection = self.app.xcb_connection
         self._eventFilters = {}
+        self.loaded = False
 
     def load(self):
         self.app.load()
+        self.app.on_update_volume(self.volume)
+        self.app.on_update_rect(self.overlay_rect)
 
     def set_event_loop(self):
         loop = QEventLoop(self.app)
@@ -202,6 +205,8 @@ class OverlayApplication(QtWidgets.QApplication):
                 self.window.translate(0, 0 - self.overlay_rect.height)
 
     def on_update_volume(self, volume):
+        if self.segments is None:
+            return
         assert 0.0 <= volume <= 1.0
         step = 1.0 / len(self.segments)
         for i, segment in enumerate(self.segments):
@@ -209,9 +214,10 @@ class OverlayApplication(QtWidgets.QApplication):
             segment.value = clamp(0.0, relative_value, 1.0)
 
     def on_update_rect(self, rect):
-        if self.window is not None:
-            self.window.move(rect.x1, rect.y1)
-            self.window.setFixedSize(rect.width, rect.height)
+        if self.window is None:
+            return
+        self.window.move(rect.x1, rect.y1)
+        self.window.setFixedSize(rect.width, rect.height)
 
     def _create_window(self, scene):
         window = QtWidgets.QGraphicsView(scene)
