@@ -1,7 +1,7 @@
 """X11 empty (overlayless) UI."""
 import asyncio
 import xcffib
-from xcffib import xproto
+from xcffib import xproto  # Required import for xcffib.connect() to work
 
 from volcorner.ui import XCBUI
 

@@ -1,14 +1,12 @@
 """Rectangle structure."""
 
+from collections import namedtuple
+
 __all__ = [
     'Point',
     'Size',
-    'Rect'
+    'Rect',
 ]
-
-from collections import namedtuple
-
-
 Point = namedtuple('Point', 'x y')
 Size = namedtuple('Size', 'width height')
 

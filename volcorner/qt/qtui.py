@@ -126,18 +126,16 @@ class OverlayApplication(QtWidgets.QApplication):
         self._has_set_advanced_window_state = False
         self.xcb_connection = self.wrap_connection()
 
-        # Use a queued connection since these can be called from another thread
-        # TODO: once threads are removed, don't use QueuedConnection
-        self.show_overlay.connect(self.on_show, Qt.QueuedConnection)
-        self.hide_overlay.connect(self.on_hide, Qt.QueuedConnection)
-        self.update_transform.connect(self.on_update_transform, Qt.QueuedConnection)
-        self.update_volume.connect(self.on_update_volume, Qt.QueuedConnection)
-        self.update_rect.connect(self.on_update_rect, Qt.QueuedConnection)
+        self.show_overlay.connect(self.on_show)
+        self.hide_overlay.connect(self.on_hide)
+        self.update_transform.connect(self.on_update_transform)
+        self.update_volume.connect(self.on_update_volume)
+        self.update_rect.connect(self.on_update_rect)
 
         # TODO: can Qt do 1-bit alpha channel?
         # Qt5 lost isCompositingManagerRunning() until 5.7
         if (hasattr(QX11Info, 'isCompositingManagerRunning') and
-                not QX11Info.isCompositingManagerRunning()):
+                not getattr(QX11Info, 'isCompositingManagerRunning')()):
             _log.warning("Compositing window manager NOT detected!  Translucency will be broken.")
 
     def load(self):

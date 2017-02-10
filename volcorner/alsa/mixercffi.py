@@ -63,9 +63,13 @@ void snd_mixer_selem_id_free(snd_mixer_selem_id_t *obj);
 void snd_mixer_selem_id_set_name(snd_mixer_selem_id_t *obj, const char *val);
 snd_mixer_elem_t *snd_mixer_find_selem(snd_mixer_t *mixer,
            const snd_mixer_selem_id_t *id);
-int snd_mixer_selem_set_playback_volume(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, long value);
+int snd_mixer_selem_set_playback_volume(snd_mixer_elem_t *elem,
+                                        snd_mixer_selem_channel_id_t
+                                        channel, long value);
 int snd_mixer_selem_set_playback_volume_all(snd_mixer_elem_t *elem, long value);
-int snd_mixer_selem_get_playback_volume(snd_mixer_elem_t *elem, snd_mixer_selem_channel_id_t channel, long *value);
+int snd_mixer_selem_get_playback_volume(snd_mixer_elem_t *elem,
+                                        snd_mixer_selem_channel_id_t channel,
+                                        long *value);
 int snd_mixer_handle_events(snd_mixer_t *mixer);
 
 int snd_mixer_selem_get_playback_dB_range(snd_mixer_elem_t *, long *, long *);

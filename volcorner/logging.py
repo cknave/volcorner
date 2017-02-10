@@ -1,8 +1,8 @@
 """Extra log levels."""
 
-__all__ = ['TRACE']
-
 import logging
+
+__all__ = ['TRACE']
 
 # New log level TRACE
 TRACE = 5

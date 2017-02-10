@@ -1,17 +1,13 @@
 """ALSA mixer."""
 import asyncio
 
-__all__ = ['ALSAMixer']
-
 import logging
 import math
-import threading
 
-import os
 from volcorner.mixer import Mixer
 from . import mixercffi
 
-
+__all__ = ['ALSAMixer']
 _log = logging.getLogger("audio")
 
 # ALSA Rounding direction parameter (0=exact)
@@ -113,9 +109,9 @@ class ALSAMixer(Mixer):
         self.on_volume_changed(self.volume)
 
 
-##
-## Functions from volume_mapping.c in alsa-utils:
-##
+#
+# Functions from volume_mapping.c in alsa-utils:
+#
 
 MAX_LINEAR_DB_SCALE = 24
 SND_CTL_TLV_DB_GAIN_MUTE = -9999999

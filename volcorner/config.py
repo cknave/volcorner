@@ -1,5 +1,15 @@
 """Configuration interface."""
 
+from argparse import ArgumentParser
+import configparser
+import logging
+import sys
+
+import os.path
+from appdirs import AppDirs
+import volcorner.logging
+from volcorner.corner import Corner
+
 __all__ = [
     # Constants
     'APP_NAME',
@@ -21,17 +31,6 @@ __all__ = [
     'log_level_for_verbosity',
     'write_config',
 ]
-
-from argparse import ArgumentParser
-import configparser
-import logging
-import sys
-
-import os.path
-from appdirs import AppDirs
-import volcorner.logging
-from volcorner.corner import Corner
-
 
 # Config file constants
 APP_NAME = 'volcorner'
@@ -70,7 +69,7 @@ def get_config(argv=sys.argv[1:], app_dirs=APP_DIRS, defaults=DEFAULTS):
     # Get the config file path.
     config_parser = ArgumentParser(add_help=False)  # Help will be added on the real ArgumentParser
     config_parser.add_argument('-c', '--config-file', metavar='FILE',
-                               help="specify config file (default: {})".format(_user_config_file_path()))
+                               help="specify config file (default: %s)" % _user_config_file_path())
     path, remaining_argv = config_file_path(config_parser, argv, app_dirs, defaults)
 
     # Read the defaults from the config file.
@@ -82,8 +81,9 @@ def get_config(argv=sys.argv[1:], app_dirs=APP_DIRS, defaults=DEFAULTS):
     # Coerce types
     defaults['verbose'] = int(defaults['verbose'])
 
-    # To get a flag name, prefix with '--' and replace '_' with '-'
-    flag = lambda s: '--' + s.replace('_', '-')
+    def flag(s):
+        """To get a flag name, prefix with '--' and replace '_' with '-'."""
+        return '--' + s.replace('_', '-')
 
     # Parse the rest of the command line arguments with the config file as defaults.
     parser = ArgumentParser(parents=[config_parser])
@@ -168,7 +168,8 @@ def read_config_file(path):
     try:
         return config[SECTION_DEFAULTS]
     except KeyError:
-        _log.warn("Ignoring config file %s because it has no %s section.", path, SECTION_DEFAULTS)
+        _log.warning("Ignoring config file %s because it has no %s section.", path,
+                     SECTION_DEFAULTS)
         return None
 
 

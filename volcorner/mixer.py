@@ -1,11 +1,11 @@
 """Abstract base audio mixer."""
 
-__all__ = ['Mixer']
-
 from abc import ABCMeta, abstractmethod
 import smokesignal
 
 from volcorner import signals
+
+__all__ = ['Mixer']
 
 
 class Mixer(metaclass=ABCMeta):
