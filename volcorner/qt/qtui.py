@@ -472,8 +472,12 @@ class NativeEventFilter(QtCore.QAbstractNativeEventFilter):
         if event_type != 'xcb_generic_event_t':
             _log.warning('Unexpected native event type %s', event_type)
             return False, 0
-        generic_event = ffi.cast('xcb_generic_event_t *', message)
-        event = self.conn.hoist_event(generic_event)
+        try:
+            generic_event = ffi.cast('xcb_generic_event_t *', message)
+            event = self.conn.hoist_event(generic_event)
+        except:
+            _log.exception('Failed to hoist XCB event')
+            return False, 0
         result = self.event_filter(event)
         dummy_result = 0  # Used on windows apparently
         return bool(result), dummy_result
